@@ -80,6 +80,7 @@ const STEAM_KEY = process.env.STEAM_KEY; // Puedes añadir más variables aquí 
 var { g: global, __dirname } = __turbopack_context__;
 {
 __turbopack_context__.s({
+    "RelsolveVanityURL": (()=>RelsolveVanityURL),
     "getPlayerSummaries": (()=>getPlayerSummaries)
 });
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$config$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/app/config.ts [app-rsc] (ecmascript)"); // cargado desde process.env en build
@@ -91,6 +92,13 @@ async function getPlayerSummaries(steamIds) {
     if (!res.ok) throw new Error(`Steam API error: ${res.status}`);
     const json = await res.json();
     return json.response.players;
+}
+async function RelsolveVanityURL(vanityUrl) {
+    const url = `${BASE}/ISteamUser/ResolveVanityURL/v1/?key=${__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$config$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["STEAM_KEY"]}&vanityurl=${vanityUrl}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Steam API error: ${res.status}`);
+    const json = await res.json();
+    return json.response.steamid;
 }
 }}),
 "[project]/src/app/page.tsx [app-rsc] (ecmascript)": ((__turbopack_context__) => {
@@ -116,22 +124,47 @@ async function HomePage() {
     const players = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$services$2f$steamService$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPlayerSummaries"])(steamIds);
     const player = players[0] // suponiendo que exista
     ;
-    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
-        className: "p-4",
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        className: "container mx-auto p-4",
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
-                className: "text-2xl font-bold",
-                children: "Bienvenido a Mi Steam App"
+                className: "text-2xl font-bold mb-6",
+                children: "Buscar Perfil de Steam"
             }, void 0, false, {
                 fileName: "[project]/src/app/page.tsx",
                 lineNumber: 15,
-                columnNumber: 7
+                columnNumber: 5
             }, this),
-            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$components$2f$SteamPlayerCard$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["default"], {
-                player: player
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(SteamProfileSearch, {
+                onProfileFound: handleProfileFound,
+                className: "mb-8"
             }, void 0, false, {
                 fileName: "[project]/src/app/page.tsx",
-                lineNumber: 16,
+                lineNumber: 17,
+                columnNumber: 5
+            }, this),
+            steamId && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "mt-8",
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
+                        className: "text-xl font-semibold mb-4",
+                        children: "Perfil encontrado:"
+                    }, void 0, false, {
+                        fileName: "[project]/src/app/page.tsx",
+                        lineNumber: 24,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$components$2f$SteamPlayerCard$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["default"], {
+                        steamId: steamId
+                    }, void 0, false, {
+                        fileName: "[project]/src/app/page.tsx",
+                        lineNumber: 25,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/src/app/page.tsx",
+                lineNumber: 23,
                 columnNumber: 7
             }, this)
         ]

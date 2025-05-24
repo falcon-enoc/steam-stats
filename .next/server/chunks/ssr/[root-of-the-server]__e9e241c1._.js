@@ -52,6 +52,7 @@ var { g: global, __dirname } = __turbopack_context__;
 {
 //hooks/useSteamPlayer.ts
 __turbopack_context__.s({
+    "useReolveVanityURL": (()=>useReolveVanityURL),
     "useSteamPlayer": (()=>useSteamPlayer)
 });
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$swr$2f$dist$2f$index$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/swr/dist/index/index.mjs [app-ssr] (ecmascript) <locals>");
@@ -63,6 +64,13 @@ function useSteamPlayer(steamId) {
     return {
         player: data?.players[0],
         isLoading: !error && !data,
+        isError: error
+    };
+}
+function useReolveVanityURL(vanityUrl) {
+    const { data, error } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$swr$2f$dist$2f$index$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["default"])(()=>vanityUrl && `/api/steam/resolveVanityURL?vanityurl=${vanityUrl}`, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$lib$2f$fetcher$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"]);
+    return {
+        steamId: data,
         isError: error
     };
 }

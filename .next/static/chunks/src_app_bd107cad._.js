@@ -47,11 +47,12 @@ var { g: global, __dirname, k: __turbopack_refresh__, m: module } = __turbopack_
 {
 //hooks/useSteamPlayer.ts
 __turbopack_context__.s({
+    "useReolveVanityURL": (()=>useReolveVanityURL),
     "useSteamPlayer": (()=>useSteamPlayer)
 });
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$swr$2f$dist$2f$index$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/swr/dist/index/index.mjs [app-client] (ecmascript) <locals>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$lib$2f$fetcher$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/app/lib/fetcher.ts [app-client] (ecmascript)");
-var _s = __turbopack_context__.k.signature();
+var _s = __turbopack_context__.k.signature(), _s1 = __turbopack_context__.k.signature();
 ;
 ;
 function useSteamPlayer(steamId) {
@@ -66,6 +67,21 @@ function useSteamPlayer(steamId) {
     };
 }
 _s(useSteamPlayer, "r2QYs02BSrn+Eu/1uMGZi8N+HnQ=", false, function() {
+    return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$swr$2f$dist$2f$index$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["default"]
+    ];
+});
+function useReolveVanityURL(vanityUrl) {
+    _s1();
+    const { data, error } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$swr$2f$dist$2f$index$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["default"])({
+        "useReolveVanityURL.useSWR": ()=>vanityUrl && `/api/steam/resolveVanityURL?vanityurl=${vanityUrl}`
+    }["useReolveVanityURL.useSWR"], __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$lib$2f$fetcher$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"]);
+    return {
+        steamId: data,
+        isError: error
+    };
+}
+_s1(useReolveVanityURL, "r2QYs02BSrn+Eu/1uMGZi8N+HnQ=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$swr$2f$dist$2f$index$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["default"]
     ];

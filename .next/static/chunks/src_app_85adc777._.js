@@ -1,0 +1,635 @@
+(globalThis.TURBOPACK = globalThis.TURBOPACK || []).push([typeof document === "object" ? document.currentScript : undefined, {
+
+"[project]/src/app/utils/steamUtils.ts [app-client] (ecmascript)": ((__turbopack_context__) => {
+"use strict";
+
+var { g: global, __dirname, k: __turbopack_refresh__, m: module } = __turbopack_context__;
+{
+// utils/steamUtils.ts
+/**
+ * Verifica si una cadena es un SteamID64 válido
+ * Los SteamID64 son números de 17 dígitos que comienzan con 7656
+ */ __turbopack_context__.s({
+    "extractSteamID": (()=>extractSteamID),
+    "isSteamID64": (()=>isSteamID64),
+    "normalizeVanityURL": (()=>normalizeVanityURL)
+});
+function isSteamID64(input) {
+    return /^7656\d{13}$/.test(input);
+}
+function extractSteamID(input) {
+    const match = input.match(/7656\d{13}/);
+    return match ? match[0] : null;
+}
+function normalizeVanityURL(input) {
+    let str = input.trim();
+    // Si es URL de vanity
+    if (str.includes('steamcommunity.com/id/')) {
+        str = str.split('steamcommunity.com/id/')[1];
+    } else if (str.includes('steamcommunity.com/profile/')) {
+        str = str.split('steamcommunity.com/profile/')[1];
+    }
+    // Eliminar cualquier slash o parámetro adicional
+    return str.split('/')[0].split('?')[0];
+}
+if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
+    __turbopack_context__.k.registerExports(module, globalThis.$RefreshHelpers$);
+}
+}}),
+"[project]/src/app/hooks/useSteamSearch.ts [app-client] (ecmascript)": ((__turbopack_context__) => {
+"use strict";
+
+var { g: global, __dirname, k: __turbopack_refresh__, m: module } = __turbopack_context__;
+{
+// src/hooks/useSteamSearch.ts
+__turbopack_context__.s({
+    "useSteamSearch": (()=>useSteamSearch)
+});
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$utils$2f$steamUtils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/app/utils/steamUtils.ts [app-client] (ecmascript)");
+var _s = __turbopack_context__.k.signature();
+;
+;
+function useSteamSearch() {
+    _s();
+    const [isLoading, setIsLoading] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [error, setError] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
+    const searchProfile = async (input)=>{
+        setIsLoading(true);
+        setError(null);
+        try {
+            const raw = input.trim();
+            // ID puro
+            if ((0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$utils$2f$steamUtils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["isSteamID64"])(raw)) return raw;
+            // Extraído de URL o texto
+            const extracted = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$utils$2f$steamUtils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["extractSteamID"])(raw);
+            if (extracted) return extracted;
+            // Vanity
+            const normalized = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$utils$2f$steamUtils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["normalizeVanityURL"])(input);
+            const res = await fetch(`/api/resolveVanityURL?vanityurl=${encodeURIComponent(normalized)}`);
+            const json = await res.json();
+            if (!res.ok) throw new Error(json.error || 'No se pudo resolver vanity URL');
+            return json.steamid;
+        } catch (err) {
+            setError(err.message);
+            throw err;
+        } finally{
+            setIsLoading(false);
+        }
+    };
+    return {
+        searchProfile,
+        isLoading,
+        error
+    };
+}
+_s(useSteamSearch, "vj++RuHna9NxFPGCY0p/mi1GZNM=");
+if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
+    __turbopack_context__.k.registerExports(module, globalThis.$RefreshHelpers$);
+}
+}}),
+"[project]/src/app/components/SteamProfileSearch.tsx [app-client] (ecmascript)": ((__turbopack_context__) => {
+"use strict";
+
+var { g: global, __dirname, k: __turbopack_refresh__, m: module } = __turbopack_context__;
+{
+// components/SteamProfileSearch.tsx
+__turbopack_context__.s({
+    "default": (()=>SteamProfileSearch)
+});
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/jsx-dev-runtime.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/framer-motion/dist/es/render/components/motion/proxy.mjs [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$hooks$2f$useSteamSearch$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/app/hooks/useSteamSearch.ts [app-client] (ecmascript)");
+;
+var _s = __turbopack_context__.k.signature();
+'use client';
+;
+;
+;
+function SteamProfileSearch({ onProfileFound, className = '' }) {
+    _s();
+    const [input, setInput] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('');
+    const { searchProfile, isLoading, error } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$hooks$2f$useSteamSearch$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSteamSearch"])();
+    const handleSubmit = async (e)=>{
+        e.preventDefault();
+        try {
+            const steamId = await searchProfile(input);
+            onProfileFound?.(steamId);
+        } catch  {
+        // El hook ya gestiona el estado de error
+        }
+    };
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["motion"].div, {
+        initial: {
+            opacity: 0,
+            y: 10
+        },
+        animate: {
+            opacity: 1,
+            y: 0
+        },
+        transition: {
+            duration: 0.3
+        },
+        className: `w-full max-w-md mx-auto ${className}`,
+        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("form", {
+            onSubmit: handleSubmit,
+            className: "flex flex-col gap-2",
+            children: [
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    className: "flex",
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                            type: "text",
+                            value: input,
+                            onChange: (e)=>setInput(e.target.value),
+                            placeholder: "URL de perfil, SteamID64 o nombre personalizado",
+                            className: "flex-1 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500",
+                            disabled: isLoading
+                        }, void 0, false, {
+                            fileName: "[project]/src/app/components/SteamProfileSearch.tsx",
+                            lineNumber: 36,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                            type: "submit",
+                            disabled: isLoading || !input.trim(),
+                            className: "bg-blue-600 text-white px-4 py-2 rounded-r-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50",
+                            children: isLoading ? 'Buscando...' : 'Buscar'
+                        }, void 0, false, {
+                            fileName: "[project]/src/app/components/SteamProfileSearch.tsx",
+                            lineNumber: 44,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "[project]/src/app/components/SteamProfileSearch.tsx",
+                    lineNumber: 35,
+                    columnNumber: 9
+                }, this),
+                error && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["motion"].p, {
+                    initial: {
+                        opacity: 0
+                    },
+                    animate: {
+                        opacity: 1
+                    },
+                    className: "text-red-500 text-sm mt-1",
+                    children: error
+                }, void 0, false, {
+                    fileName: "[project]/src/app/components/SteamProfileSearch.tsx",
+                    lineNumber: 54,
+                    columnNumber: 11
+                }, this),
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                    className: "text-xs text-gray-500 mt-1",
+                    children: "Ingresa un perfil de Steam: URL completa, SteamID64 o nombre personalizado"
+                }, void 0, false, {
+                    fileName: "[project]/src/app/components/SteamProfileSearch.tsx",
+                    lineNumber: 63,
+                    columnNumber: 9
+                }, this)
+            ]
+        }, void 0, true, {
+            fileName: "[project]/src/app/components/SteamProfileSearch.tsx",
+            lineNumber: 34,
+            columnNumber: 7
+        }, this)
+    }, void 0, false, {
+        fileName: "[project]/src/app/components/SteamProfileSearch.tsx",
+        lineNumber: 28,
+        columnNumber: 5
+    }, this);
+}
+_s(SteamProfileSearch, "6MGaYvE7n5zWdGMKg+t1+0NB5Hw=", false, function() {
+    return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$hooks$2f$useSteamSearch$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSteamSearch"]
+    ];
+});
+_c = SteamProfileSearch;
+var _c;
+__turbopack_context__.k.register(_c, "SteamProfileSearch");
+if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
+    __turbopack_context__.k.registerExports(module, globalThis.$RefreshHelpers$);
+}
+}}),
+"[project]/src/app/lib/fetcher.ts [app-client] (ecmascript)": ((__turbopack_context__) => {
+"use strict";
+
+var { g: global, __dirname, k: __turbopack_refresh__, m: module } = __turbopack_context__;
+{
+// lib/fetcher.ts
+__turbopack_context__.s({
+    "default": (()=>fetcher)
+});
+const cache = new Map();
+async function fetcher(input, init, ttl = 10000) {
+    const key = typeof input === 'string' ? input : JSON.stringify(input);
+    const now = Date.now();
+    const cached = cache.get(key);
+    if (cached && cached.expiry > now) {
+        return cached.data;
+    }
+    const res = await fetch(input, init);
+    const text = await res.text();
+    let data;
+    try {
+        data = text ? JSON.parse(text) : {};
+    } catch (err) {
+        if (res.ok) {
+            throw new Error(`Error parsing JSON: ${err.message}`);
+        }
+        throw new Error(`HTTP error ${res.status}: ${text}`);
+    }
+    if (!res.ok) {
+        const message = data && data.error || res.statusText;
+        throw new Error(`HTTP error ${res.status}: ${message}`);
+    }
+    cache.set(key, {
+        data,
+        expiry: now + ttl
+    });
+    return data;
+}
+if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
+    __turbopack_context__.k.registerExports(module, globalThis.$RefreshHelpers$);
+}
+}}),
+"[project]/src/app/hooks/useSteamPlayer.ts [app-client] (ecmascript)": ((__turbopack_context__) => {
+"use strict";
+
+var { g: global, __dirname, k: __turbopack_refresh__, m: module } = __turbopack_context__;
+{
+//hooks/useSteamPlayer.ts
+__turbopack_context__.s({
+    "useReolveVanityURL": (()=>useReolveVanityURL),
+    "useSteamPlayer": (()=>useSteamPlayer)
+});
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$swr$2f$dist$2f$index$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/swr/dist/index/index.mjs [app-client] (ecmascript) <locals>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$lib$2f$fetcher$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/app/lib/fetcher.ts [app-client] (ecmascript)");
+var _s = __turbopack_context__.k.signature(), _s1 = __turbopack_context__.k.signature();
+;
+;
+function useSteamPlayer(steamId) {
+    _s();
+    const { data, error } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$swr$2f$dist$2f$index$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["default"])({
+        "useSteamPlayer.useSWR": ()=>steamId && `/api/getPlayerSummaries?steamids=${steamId}`
+    }["useSteamPlayer.useSWR"], __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$lib$2f$fetcher$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"]);
+    return {
+        player: data?.players[0],
+        isLoading: !error && !data,
+        isError: error
+    };
+}
+_s(useSteamPlayer, "r2QYs02BSrn+Eu/1uMGZi8N+HnQ=", false, function() {
+    return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$swr$2f$dist$2f$index$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["default"]
+    ];
+});
+function useReolveVanityURL(vanityUrl) {
+    _s1();
+    const { data, error } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$swr$2f$dist$2f$index$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["default"])({
+        "useReolveVanityURL.useSWR": ()=>vanityUrl && `/api/resolveVanityURL?vanityurl=${vanityUrl}`
+    }["useReolveVanityURL.useSWR"], __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$lib$2f$fetcher$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"]);
+    return {
+        steamId: data,
+        isError: error
+    };
+}
+_s1(useReolveVanityURL, "r2QYs02BSrn+Eu/1uMGZi8N+HnQ=", false, function() {
+    return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$swr$2f$dist$2f$index$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["default"]
+    ];
+});
+if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
+    __turbopack_context__.k.registerExports(module, globalThis.$RefreshHelpers$);
+}
+}}),
+"[project]/src/app/components/SteamPlayerCard.tsx [app-client] (ecmascript)": ((__turbopack_context__) => {
+"use strict";
+
+var { g: global, __dirname, k: __turbopack_refresh__, m: module } = __turbopack_context__;
+{
+__turbopack_context__.s({
+    "default": (()=>SteamPlayerCard)
+});
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/jsx-dev-runtime.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/image.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/framer-motion/dist/es/render/components/motion/proxy.mjs [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$hooks$2f$useSteamPlayer$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/app/hooks/useSteamPlayer.ts [app-client] (ecmascript)");
+;
+var _s = __turbopack_context__.k.signature();
+'use client';
+;
+;
+;
+const statusMap = {
+    0: 'Offline',
+    1: 'Online',
+    2: 'Busy',
+    3: 'Away',
+    4: 'Snooze',
+    5: 'Looking to trade',
+    6: 'Looking to play'
+};
+function SteamPlayerCard({ steamId, player: propPlayer }) {
+    _s();
+    // Si se proporciona steamId, usamos el hook para obtener los datos
+    const { player: hookPlayer, isLoading, isError } = steamId ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$hooks$2f$useSteamPlayer$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSteamPlayer"])(steamId) : {
+        player: undefined,
+        isLoading: false,
+        isError: undefined
+    };
+    // Usamos el player proporcionado como prop o el obtenido del hook
+    const player = propPlayer || hookPlayer;
+    // Estado de carga
+    if (steamId && isLoading) {
+        return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["motion"].div, {
+            initial: {
+                opacity: 0,
+                y: 10
+            },
+            animate: {
+                opacity: 1,
+                y: 0
+            },
+            transition: {
+                duration: 0.3
+            },
+            className: "max-w-sm bg-white rounded-2xl shadow-lg overflow-hidden p-4 flex items-center justify-center",
+            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                children: "Cargando perfil..."
+            }, void 0, false, {
+                fileName: "[project]/src/app/components/SteamPlayerCard.tsx",
+                lineNumber: 39,
+                columnNumber: 9
+            }, this)
+        }, void 0, false, {
+            fileName: "[project]/src/app/components/SteamPlayerCard.tsx",
+            lineNumber: 33,
+            columnNumber: 7
+        }, this);
+    }
+    // Estado de error
+    if (steamId && isError) {
+        return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["motion"].div, {
+            initial: {
+                opacity: 0,
+                y: 10
+            },
+            animate: {
+                opacity: 1,
+                y: 0
+            },
+            transition: {
+                duration: 0.3
+            },
+            className: "max-w-sm bg-white rounded-2xl shadow-lg overflow-hidden p-4 flex items-center justify-center",
+            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                className: "text-red-500",
+                children: "Error al cargar el perfil"
+            }, void 0, false, {
+                fileName: "[project]/src/app/components/SteamPlayerCard.tsx",
+                lineNumber: 53,
+                columnNumber: 9
+            }, this)
+        }, void 0, false, {
+            fileName: "[project]/src/app/components/SteamPlayerCard.tsx",
+            lineNumber: 47,
+            columnNumber: 7
+        }, this);
+    }
+    // Si no hay datos del jugador
+    if (!player) {
+        return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["motion"].div, {
+            initial: {
+                opacity: 0,
+                y: 10
+            },
+            animate: {
+                opacity: 1,
+                y: 0
+            },
+            transition: {
+                duration: 0.3
+            },
+            className: "max-w-sm bg-white rounded-2xl shadow-lg overflow-hidden p-4 flex items-center justify-center",
+            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                children: "No se encontró información del jugador"
+            }, void 0, false, {
+                fileName: "[project]/src/app/components/SteamPlayerCard.tsx",
+                lineNumber: 67,
+                columnNumber: 9
+            }, this)
+        }, void 0, false, {
+            fileName: "[project]/src/app/components/SteamPlayerCard.tsx",
+            lineNumber: 61,
+            columnNumber: 7
+        }, this);
+    }
+    // Si tenemos datos del jugador, mostramos la tarjeta
+    const { avatarfull, personaname, personastate, lastlogoff, profileurl, realname } = player;
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["motion"].div, {
+        initial: {
+            opacity: 0,
+            y: 10
+        },
+        animate: {
+            opacity: 1,
+            y: 0
+        },
+        transition: {
+            duration: 0.3
+        },
+        className: "max-w-sm bg-white rounded-2xl shadow-lg overflow-hidden p-4 flex space-x-4",
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "w-24 h-24 relative flex-shrink-0",
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                    src: avatarfull,
+                    alt: `${personaname} avatar`,
+                    layout: "fill",
+                    className: "rounded-full"
+                }, void 0, false, {
+                    fileName: "[project]/src/app/components/SteamPlayerCard.tsx",
+                    lineNumber: 90,
+                    columnNumber: 9
+                }, this)
+            }, void 0, false, {
+                fileName: "[project]/src/app/components/SteamPlayerCard.tsx",
+                lineNumber: 89,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "flex-1 flex flex-col justify-center",
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
+                        className: "text-xl font-semibold",
+                        children: personaname
+                    }, void 0, false, {
+                        fileName: "[project]/src/app/components/SteamPlayerCard.tsx",
+                        lineNumber: 99,
+                        columnNumber: 9
+                    }, this),
+                    realname && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                        className: "text-sm text-gray-600",
+                        children: realname
+                    }, void 0, false, {
+                        fileName: "[project]/src/app/components/SteamPlayerCard.tsx",
+                        lineNumber: 100,
+                        columnNumber: 22
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                        className: "mt-2 text-sm",
+                        children: [
+                            "Status: ",
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                className: "font-medium",
+                                children: statusMap[personastate]
+                            }, void 0, false, {
+                                fileName: "[project]/src/app/components/SteamPlayerCard.tsx",
+                                lineNumber: 102,
+                                columnNumber: 19
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/src/app/components/SteamPlayerCard.tsx",
+                        lineNumber: 101,
+                        columnNumber: 9
+                    }, this),
+                    lastlogoff && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                        className: "text-xs text-gray-500",
+                        children: [
+                            "Last seen: ",
+                            new Date(lastlogoff * 1000).toLocaleString()
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/src/app/components/SteamPlayerCard.tsx",
+                        lineNumber: 105,
+                        columnNumber: 11
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
+                        href: profileurl,
+                        target: "_blank",
+                        rel: "noopener noreferrer",
+                        className: "mt-3 inline-block text-blue-600 hover:underline",
+                        children: "Ver perfil"
+                    }, void 0, false, {
+                        fileName: "[project]/src/app/components/SteamPlayerCard.tsx",
+                        lineNumber: 109,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/src/app/components/SteamPlayerCard.tsx",
+                lineNumber: 98,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/src/app/components/SteamPlayerCard.tsx",
+        lineNumber: 83,
+        columnNumber: 5
+    }, this);
+}
+_s(SteamPlayerCard, "K6rKS4tsEt5qLBmcRVdZvKvLp6g=", false, function() {
+    return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$hooks$2f$useSteamPlayer$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSteamPlayer"]
+    ];
+});
+_c = SteamPlayerCard;
+var _c;
+__turbopack_context__.k.register(_c, "SteamPlayerCard");
+if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
+    __turbopack_context__.k.registerExports(module, globalThis.$RefreshHelpers$);
+}
+}}),
+"[project]/src/app/page.tsx [app-client] (ecmascript)": ((__turbopack_context__) => {
+"use strict";
+
+var { g: global, __dirname, k: __turbopack_refresh__, m: module } = __turbopack_context__;
+{
+// src/app/page.tsx
+__turbopack_context__.s({
+    "default": (()=>HomePage)
+});
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/jsx-dev-runtime.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$components$2f$SteamProfileSearch$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/app/components/SteamProfileSearch.tsx [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$components$2f$SteamPlayerCard$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/app/components/SteamPlayerCard.tsx [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$hooks$2f$useSteamPlayer$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/app/hooks/useSteamPlayer.ts [app-client] (ecmascript)");
+;
+var _s = __turbopack_context__.k.signature();
+'use client';
+;
+;
+;
+;
+function HomePage() {
+    _s();
+    const [steamId, setSteamId] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
+    // hook que llama a tu API getPlayerSummaries a partir de steamId
+    const { player, isLoading, isError } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$hooks$2f$useSteamPlayer$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSteamPlayer"])(steamId);
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("main", {
+        className: "p-4",
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                className: "text-red-600",
+                children: "76561198078447643"
+            }, void 0, false, {
+                fileName: "[project]/src/app/page.tsx",
+                lineNumber: 14,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$components$2f$SteamProfileSearch$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                onProfileFound: setSteamId
+            }, void 0, false, {
+                fileName: "[project]/src/app/page.tsx",
+                lineNumber: 15,
+                columnNumber: 7
+            }, this),
+            isLoading && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                children: "Cargando datos del jugador…"
+            }, void 0, false, {
+                fileName: "[project]/src/app/page.tsx",
+                lineNumber: 17,
+                columnNumber: 21
+            }, this),
+            isError && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                className: "text-red-500",
+                children: isError
+            }, void 0, false, {
+                fileName: "[project]/src/app/page.tsx",
+                lineNumber: 18,
+                columnNumber: 19
+            }, this),
+            player && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$components$2f$SteamPlayerCard$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                player: player
+            }, void 0, false, {
+                fileName: "[project]/src/app/page.tsx",
+                lineNumber: 19,
+                columnNumber: 18
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/src/app/page.tsx",
+        lineNumber: 13,
+        columnNumber: 5
+    }, this);
+}
+_s(HomePage, "veUyBhxh1JbilA9+VP1OWP5+298=", false, function() {
+    return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$hooks$2f$useSteamPlayer$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSteamPlayer"]
+    ];
+});
+_c = HomePage;
+var _c;
+__turbopack_context__.k.register(_c, "HomePage");
+if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
+    __turbopack_context__.k.registerExports(module, globalThis.$RefreshHelpers$);
+}
+}}),
+}]);
+
+//# sourceMappingURL=src_app_85adc777._.js.map

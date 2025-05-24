@@ -3,9 +3,9 @@ import useSWR from 'swr';
 import type { Player } from '../types/steam';
 import fetcher from '../lib/fetcher';
 
-export function useSteamPlayer(steamId: string) {
+export function useSteamPlayer(steamId: string | null) {
   const { data, error } = useSWR<{ players: Player[] }>(
-    () => steamId && `/api/steam/getPlayerSummaries?steamids=${steamId}`,
+    () => steamId && `/api/getPlayerSummaries?steamids=${steamId}`,
     fetcher
   );
 
@@ -14,4 +14,15 @@ export function useSteamPlayer(steamId: string) {
     isLoading: !error && !data,
     isError: error,
   };
+}
+
+export function useReolveVanityURL(vanityUrl: string) {
+  const { data, error } = useSWR<string>(
+    () => vanityUrl && `/api/resolveVanityURL?vanityurl=${vanityUrl}`,
+    fetcher
+  );
+  return {
+    steamId: data,
+    isError: error,
+  }
 }

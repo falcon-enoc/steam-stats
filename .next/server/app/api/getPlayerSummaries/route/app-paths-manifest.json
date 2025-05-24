@@ -1,0 +1,3 @@
+{
+  "/api/getPlayerSummaries/route": "app/api/getPlayerSummaries/route.js"
+}
