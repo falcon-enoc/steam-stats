@@ -23,7 +23,8 @@ export function useSteamSearch() {
       if (!res.ok) throw new Error(json.error || 'No se pudo resolver vanity URL');
       return json.steamid;
     } catch (err: any) {
-      setError(err.message);
+      const msg = err instanceof Error ? err.message : String(err)
+      setError(msg)
       throw err;
     } finally {
       setIsLoading(false);
