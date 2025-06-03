@@ -1,5 +1,42 @@
-.env
+*.webp
+# Dependencias de Node.js
 node_modules/
+
+# Build de Next.js
+.next/
+out/
+
+# Archivos de entorno (variables sensibles)
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Editor y herramientas
+.vscode/
+.idea/
+
+# Caché de ESLint (si lo tienes configurado)
+.eslintcache
+
+# Caché de Jest (si usas tests)
+jest_cache/
+coverage/
+
+# Archivos de lock de pnpm (si usas pnpm), opcional si no quieres versionarlos
+# pnpm-lock.yaml
+
+# Build de Storybook (si lo usas)
+storybook-static/
+
+# Otros artefactos temporales generales
+.cache/
 dist/
-package-lock.json
-package.json
