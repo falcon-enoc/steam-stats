@@ -1,35 +1,31 @@
 // src/hooks/useSteamSearch.ts
-import { useState } from 'react';
-import { isSteamID64, extractSteamID, normalizeVanityURL } from '@/utils/steamUtils';
+import { isSteamID64, extractSteamID, normalizeVanityURL } from '@/utils/steamUtils'
+import useSWRMutation from 'swr/mutation'
+
+async function resolveVanity(_: string, { arg: vanityUrl }: { arg: string }) {
+  const res = await fetch(`/api/resolveVanityURL?vanityurl=${encodeURIComponent(vanityUrl)}`)
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'No se pudo resolver vanity URL')
+  return json.steamid as string
+}
 
 export function useSteamSearch() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { trigger, isMutating, error } = useSWRMutation('/api/resolveVanityURL', resolveVanity)
 
   const searchProfile = async (input: string): Promise<string> => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const raw = input.trim();
-      // ID puro
-      if (isSteamID64(raw)) return raw;
-      // Extraído de URL o texto
-      const extracted = extractSteamID(raw);
-      if (extracted) return extracted;
-      // Vanity
-      const normalized = normalizeVanityURL(input);
-      const res = await fetch(`/api/resolveVanityURL?vanityurl=${encodeURIComponent(normalized)}`);
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || 'No se pudo resolver vanity URL');
-      return json.steamid;
-    } catch (err: any) {
-      const msg = err instanceof Error ? err.message : String(err)
-      setError(msg)
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const raw = input.trim()
+    if (isSteamID64(raw)) return raw
 
-  return { searchProfile, isLoading, error };
+    const extracted = extractSteamID(raw)
+    if (extracted) return extracted
+
+    const normalized = normalizeVanityURL(input)
+    return await trigger(normalized)
+  }
+
+  return {
+    searchProfile,
+    isLoading: isMutating,
+    error: error instanceof Error ? error.message : error ? String(error) : null,
+  }
 }
