@@ -1,5 +1,4 @@
 // src/utils/steamGameUtils.ts
-import useSWR from 'swr'
 import type { OwnedGame } from '@/types/steam'
 
 /**
@@ -36,50 +35,129 @@ export function groupByPlaytimeBracket(
   return result
 }
 
-interface UseSteamGames {
-  games: OwnedGame[] | null
-  isLoading: boolean
-  error: string | null
+/**
+ * Tipos para ordenamiento de juegos
+ */
+export type SortField = 'playtime'
+export type SortOrder = 'asc' | 'desc'
+
+/**
+ * Ordena una lista de juegos según el campo y orden especificados
+ */
+export function sortGames(
+  games: OwnedGame[],
+  sortField: SortField,
+  sortOrder: SortOrder = 'desc'
+): OwnedGame[] {
+  return [...games].sort((a, b) => {
+    // Solo ordenamiento por tiempo de juego
+    const aValue = a.playtime_forever
+    const bValue = b.playtime_forever
+
+    return sortOrder === 'asc' 
+      ? aValue - bValue
+      : bValue - aValue
+  })
 }
 
 /**
- * Construye la URL de la imagen del juego desde Steam
+ * Filtra juegos que han sido jugados (tienen tiempo de juego > 0)
  */
-function buildGameImageUrl(appid: number, hash: string, type: 'icon' | 'logo'): string {
-  if (!hash) return ''
-  
-  // URLs oficiales de Steam para imágenes de juegos
-  const baseUrl = 'https://media.steampowered.com/steamcommunity/public/images/apps'
-  
-  if (type === 'icon') {
-    return `${baseUrl}/${appid}/${hash}.jpg`
-  } else {
-    return `${baseUrl}/${appid}/${hash}.jpg`
-  }
+export function getPlayedGames(games: OwnedGame[]): OwnedGame[] {
+  return games.filter(game => game.playtime_forever > 0)
 }
 
 /**
- * Hook para obtener los juegos poseídos de un usuario de Steam
- * Utiliza SWR para cache y revalidación al consultar nuestra API interna
+ * Filtra juegos que nunca han sido jugados
  */
-export function useSteamGames(steamId: string | null): UseSteamGames {
-  const endpoint = steamId ? `/api/getOwnedGames?steamid=${steamId}` : null
+export function getUnplayedGames(games: OwnedGame[]): OwnedGame[] {
+  return games.filter(game => game.playtime_forever === 0)
+}
 
-  const { data, error, isValidating } = useSWR<{ games: OwnedGame[] }>(
-    endpoint,
-    (url: string) => fetch(url).then(res => res.json())
+/**
+ * Obtiene juegos jugados recientemente (en los últimos N días)
+ */
+export function getRecentlyPlayedGames(games: OwnedGame[], days: number = 30): OwnedGame[] {
+  const cutoffDate = Math.floor(Date.now() / 1000) - (days * 24 * 60 * 60)
+  return games.filter(game => 
+    game.rtime_last_played && game.rtime_last_played > cutoffDate
   )
+}
 
-  // Procesar los juegos para agregar URLs de imágenes completas
-  const processedGames = data?.games?.map(game => ({
-    ...game,
-    iconUrl: game.img_icon_url ? buildGameImageUrl(game.appid, game.img_icon_url, 'icon') : '',
-    logoUrl: game.img_logo_url ? buildGameImageUrl(game.appid, game.img_logo_url, 'logo') : '',
-  })) ?? null
+/**
+ * Tipo para tipos de imagen
+ */
+export type ImageType = 'header' | 'capsule' | 'logo' | 'icon'
 
+/**
+ * Construye diferentes tipos de URLs de imágenes de Steam
+ */
+export function buildGameImageUrls(appid: number, iconHash?: string, logoHash?: string) {
   return {
-    games: processedGames,
-    isLoading: !error && isValidating,
-    error: error instanceof Error ? error.message : error ? String(error) : null,
+    // Imágenes estáticas (no requieren hash)
+    header: `https://cdn.akamai.steamstatic.com/steam/apps/${appid}/header.jpg`,
+    capsule: `https://cdn.akamai.steamstatic.com/steam/apps/${appid}/capsule_231x87.jpg`,
+    library: `https://cdn.akamai.steamstatic.com/steam/apps/${appid}/library_600x900.jpg`,
+    
+    // Imágenes dinámicas (requieren hash de la API)
+    logo: logoHash ? `https://media.steampowered.com/steamcommunity/public/images/apps/${appid}/${logoHash}.jpg` : '',
+    icon: iconHash ? `https://media.steampowered.com/steamcommunity/public/images/apps/${appid}/${iconHash}.jpg` : ''
   }
+}
+
+/**
+ * Estrategia de fallback inteligente para imágenes
+ */
+export function getImageWithFallback(
+  game: OwnedGame,
+  imageType: ImageType,
+  imageErrors: Set<string>
+): { url: string; type: string; key: string } | null {
+  const imageUrls = buildGameImageUrls(game.appid, game.img_icon_url, game.img_logo_url)
+  const imageKey = `${game.appid}-${imageType}`
+  
+  // Si la imagen principal falló, usar fallbacks
+  if (imageErrors.has(imageKey)) {
+    const fallbacks = {
+      'header': ['capsule', 'logo', 'icon'],
+      'capsule': ['header', 'logo', 'icon'], 
+      'logo': ['header', 'capsule', 'icon'],
+      'icon': ['logo', 'header', 'capsule']
+    }
+    
+    for (const fallback of fallbacks[imageType]) {
+      const fallbackKey = `${game.appid}-${fallback}`
+      if (!imageErrors.has(fallbackKey) && imageUrls[fallback as keyof typeof imageUrls]) {
+        return {
+          url: imageUrls[fallback as keyof typeof imageUrls],
+          type: fallback,
+          key: fallbackKey
+        }
+      }
+    }
+    return null
+  }
+  
+  return {
+    url: imageUrls[imageType],
+    type: imageType,
+    key: imageKey
+  }
+}
+
+/**
+ * Formatea el tiempo de juego en un formato legible
+ */
+export function formatPlaytime(minutes: number): string {
+  const hours = Math.floor(minutes / 60)
+  const remainingMinutes = minutes % 60
+  return `${hours}h ${remainingMinutes}min`
+}
+
+/**
+ * Formatea la fecha de última vez jugado
+ */
+export function formatLastPlayed(timestamp?: number): string {
+  if (!timestamp) return 'Nunca'
+  return new Date(timestamp * 1000).toLocaleDateString()
 }
