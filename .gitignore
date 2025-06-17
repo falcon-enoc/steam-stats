@@ -3,7 +3,7 @@
 node_modules/
 
 # Build de Next.js
-.next/*
+.next/
 out/
 
 # Archivos de entorno (variables sensibles)
