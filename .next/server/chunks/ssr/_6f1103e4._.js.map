@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 7, "column": 0}, "map": {"version":3,"sources":["file:///Users/enocfalcon/proyectos/steam-stats/src/app/layout.tsx"],"sourcesContent":["// app/layout.tsx\nimport './globals.css';           // tus estilos globales\nimport { ReactNode } from 'react';\n\nexport const metadata = {         // opcional: meta tags, título por defecto…\n  title: 'Mi Steam App',\n  description: 'Consulta datos de Steam con Next.js',\n};\n\nexport default function RootLayout({ children }: { children: ReactNode }) {\n  return (\n    <html lang=\"es\">\n      <body>\n        {/* Aquí tu Header/Provider/Layout común */}\n        <main>{children}</main>\n      </body>\n    </html>\n  );\n}\n"],"names":[],"mappings":"AAAA,iBAAiB;;;;;;;;AAIV,MAAM,WAAW;IACtB,OAAO;IACP,aAAa;AACf;AAEe,SAAS,WAAW,EAAE,QAAQ,EAA2B;IACtE,qBACE,8OAAC;QAAK,MAAK;kBACT,cAAA,8OAAC;sBAEC,cAAA,8OAAC;0BAAM;;;;;;;;;;;;;;;;AAIf","debugId":null}},
-    {"offset": {"line": 46, "column": 0}, "map": {"version":3,"sources":["file:///Users/enocfalcon/proyectos/steam-stats/node_modules/next/src/server/route-modules/app-page/vendored/rsc/react-jsx-dev-runtime.ts"],"sourcesContent":["module.exports = require('../../module.compiled').vendored[\n  'react-rsc'\n].ReactJsxDevRuntime\n"],"names":["module","exports","require","vendored","ReactJsxDevRuntime"],"mappings":";AAAAA,OAAOC,OAAO,GAAGC,QAAQ,4HAAyBC,QAAQ,CACxD,YACD,CAACC,kBAAkB","ignoreList":[0],"debugId":null}}]
-}
