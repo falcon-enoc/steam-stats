@@ -3,34 +3,34 @@
 import { useState } from 'react'
 import { useSteamGames } from '@/hooks/useSteamGames'
 import { motion } from 'framer-motion'
+import { 
+  sortGames, 
+  getImageWithFallback,
+  formatPlaytime,
+  formatLastPlayed,
+  type SortField, 
+  type SortOrder,
+  type ImageType 
+} from '@/utils/steamGamesUtils'
 
 interface Props {
   steamId: string
 }
 
-/**
- * Construye diferentes tipos de URLs de imágenes de Steam
- */
-function buildGameImageUrls(appid: number, iconHash?: string, logoHash?: string) {
-  return {
-    // Imágenes estáticas (no requieren hash)
-    header: `https://cdn.akamai.steamstatic.com/steam/apps/${appid}/header.jpg`,
-    capsule: `https://cdn.akamai.steamstatic.com/steam/apps/${appid}/capsule_231x87.jpg`,
-    library: `https://cdn.akamai.steamstatic.com/steam/apps/${appid}/library_600x900.jpg`,
-    
-    // Imágenes dinámicas (requieren hash de la API)
-    logo: logoHash ? `https://media.steampowered.com/steamcommunity/public/images/apps/${appid}/${logoHash}.jpg` : '',
-    icon: iconHash ? `https://media.steampowered.com/steamcommunity/public/images/apps/${appid}/${iconHash}.jpg` : ''
-  }
-}
-
 export default function SteamOwnedGames({ steamId }: Props) {
   const { games, isLoading, error } = useSteamGames(steamId)
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set())
-  const [imageType, setImageType] = useState<'header' | 'capsule' | 'logo' | 'icon'>('header')
+  const [imageType, setImageType] = useState<ImageType>('header')
+  const [sortField, setSortField] = useState<SortField>('playtime')
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
 
   const handleImageError = (imageKey: string) => {
     setImageErrors(prev => new Set(prev).add(imageKey))
+  }
+
+  const handleSort = (field: SortField) => {
+    // Como solo tenemos un campo (playtime), solo cambiamos el orden
+    setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
   }
 
   if (isLoading) return <p>Cargando juegos…</p>
@@ -39,6 +39,40 @@ export default function SteamOwnedGames({ steamId }: Props) {
 
   return (
     <div>
+      {/* Controles de ordenamiento */}
+      <div className="mb-4 flex flex-wrap items-center gap-4">
+        <span className="text-sm font-medium text-gray-700">Ordenar por tiempo jugado:</span>
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleSort('playtime')}
+            className={`px-3 py-1 rounded text-sm transition-colors flex items-center gap-1 ${
+              sortOrder === 'desc'
+                ? 'bg-blue-500 text-white' 
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            Mayor a menor
+            {sortOrder === 'desc' && (
+              <span className="text-xs">↓</span>
+            )}
+          </button>
+          
+          <button
+            onClick={() => setSortOrder('asc')}
+            className={`px-3 py-1 rounded text-sm transition-colors flex items-center gap-1 ${
+              sortOrder === 'asc'
+                ? 'bg-blue-500 text-white' 
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            Menor a mayor
+            {sortOrder === 'asc' && (
+              <span className="text-xs">↑</span>
+            )}
+          </button>
+        </div>
+      </div>
+
       {/* Selector de tipo de imagen */}
       <div className="mb-6 flex flex-wrap items-center gap-2">
         <span className="text-sm font-medium text-gray-700">Tipo de imagen:</span>
@@ -63,48 +97,13 @@ export default function SteamOwnedGames({ steamId }: Props) {
       </div>
 
       <motion.ul
-        key={imageType} // Re-animar cuando cambie el tipo
+        key={`${imageType}-${sortField}-${sortOrder}`} // Re-animar cuando cambie el tipo o ordenamiento
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
       >
-        {games.map(game => {
-          const imageUrls = buildGameImageUrls(game.appid, game.img_icon_url, game.img_logo_url)
-          
-          // Estrategia de fallback inteligente
-          const getImageWithFallback = () => {
-            const imageKey = `${game.appid}-${imageType}`
-            
-            // Si la imagen principal falló, usar fallbacks
-            if (imageErrors.has(imageKey)) {
-              const fallbacks = {
-                'header': ['capsule', 'logo', 'icon'],
-                'capsule': ['header', 'logo', 'icon'], 
-                'logo': ['header', 'capsule', 'icon'],
-                'icon': ['logo', 'header', 'capsule']
-              }
-              
-              for (const fallback of fallbacks[imageType]) {
-                const fallbackKey = `${game.appid}-${fallback}`
-                if (!imageErrors.has(fallbackKey) && imageUrls[fallback as keyof typeof imageUrls]) {
-                  return {
-                    url: imageUrls[fallback as keyof typeof imageUrls],
-                    type: fallback,
-                    key: fallbackKey
-                  }
-                }
-              }
-              return null
-            }
-            
-            return {
-              url: imageUrls[imageType],
-              type: imageType,
-              key: imageKey
-            }
-          }
-
-          const imageData = getImageWithFallback()
+        {sortGames(games, sortField, sortOrder).map(game => {
+          const imageData = getImageWithFallback(game, imageType, imageErrors)
           
           return (
             <motion.li 
@@ -157,12 +156,12 @@ export default function SteamOwnedGames({ steamId }: Props) {
                 
                 <div className="space-y-1">
                   <p className="text-sm text-gray-600">
-                    <span className="font-medium">Tiempo total:</span> {Math.floor(game.playtime_forever / 60)}h {game.playtime_forever % 60}min
+                    <span className="font-medium">Tiempo total:</span> {formatPlaytime(game.playtime_forever)}
                   </p>
                   
                   {game.rtime_last_played && (
                     <p className="text-xs text-gray-500">
-                      Última vez: {new Date(game.rtime_last_played * 1000).toLocaleDateString()}
+                      Última vez: {formatLastPlayed(game.rtime_last_played)}
                     </p>
                   )}
                 </div>
