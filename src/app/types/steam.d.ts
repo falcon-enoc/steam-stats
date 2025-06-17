@@ -40,6 +40,7 @@ export interface Player {
     playtime_mac_forever: number;
     playtime_linux_forever: number;
     has_community_visible_stats: boolean;
+    rtime_last_played?: number;
   }
   
   // Estructura de la respuesta de GetOwnedGames
