@@ -9,11 +9,17 @@ interface UseSteamGames {
 }
 
 /**
+ * Construye la URL de la imagen del juego desde Steam
+ */
+function buildGameImageUrl(appid: number, hash: string): string {
+  if (!hash) return ''
+  return `https://media.steampowered.com/steamcommunity/public/images/apps/${appid}/${hash}.jpg`
+}
+
+/**
  * Hook para obtener los juegos poseídos de un usuario de Steam
- * Utiliza SWR para cache y revalidación al consultar nuestra API interna
  */
 export function useSteamGames(steamId: string | null): UseSteamGames {
-  // Si no hay steamId, SWR no dispara la petición
   const endpoint = steamId ? `/api/getOwnedGames?steamid=${steamId}` : null
 
   const { data, error, isValidating } = useSWR<{ games: OwnedGame[] }>(
