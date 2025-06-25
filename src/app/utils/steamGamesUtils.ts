@@ -1,4 +1,5 @@
 // src/utils/steamGameUtils.ts
+import useSWR from 'swr'
 import type { OwnedGame } from '@/types/steam'
 
 /**
@@ -35,84 +36,118 @@ export function groupByPlaytimeBracket(
   return result
 }
 
-/**
- * Tipos para ordenamiento de juegos
- */
-export type SortField = 'playtime'
+interface UseSteamGames {
+  games: OwnedGame[] | null
+  isLoading: boolean
+  error: string | null
+}
+
+// Tipos para ordenamiento
+export type SortField = 'playtime' | 'name' | 'lastPlayed'
 export type SortOrder = 'asc' | 'desc'
-
-/**
- * Ordena una lista de juegos según el campo y orden especificados
- */
-export function sortGames(
-  games: OwnedGame[],
-  sortField: SortField,
-  sortOrder: SortOrder = 'desc'
-): OwnedGame[] {
-  return [...games].sort((a, b) => {
-    // Solo ordenamiento por tiempo de juego
-    const aValue = a.playtime_forever
-    const bValue = b.playtime_forever
-
-    return sortOrder === 'asc' 
-      ? aValue - bValue
-      : bValue - aValue
-  })
-}
-
-/**
- * Filtra juegos que han sido jugados (tienen tiempo de juego > 0)
- */
-export function getPlayedGames(games: OwnedGame[]): OwnedGame[] {
-  return games.filter(game => game.playtime_forever > 0)
-}
-
-/**
- * Filtra juegos que nunca han sido jugados
- */
-export function getUnplayedGames(games: OwnedGame[]): OwnedGame[] {
-  return games.filter(game => game.playtime_forever === 0)
-}
-
-/**
- * Obtiene juegos jugados recientemente (en los últimos N días)
- */
-export function getRecentlyPlayedGames(games: OwnedGame[], days: number = 30): OwnedGame[] {
-  const cutoffDate = Math.floor(Date.now() / 1000) - (days * 24 * 60 * 60)
-  return games.filter(game => 
-    game.rtime_last_played && game.rtime_last_played > cutoffDate
-  )
-}
-
-/**
- * Tipo para tipos de imagen
- */
 export type ImageType = 'header' | 'capsule' | 'logo' | 'icon'
 
 /**
- * Construye diferentes tipos de URLs de imágenes de Steam
+ * Ordena un array de juegos según el campo y orden especificados
+ */
+export function sortGames(games: OwnedGame[], field: SortField, order: SortOrder): OwnedGame[] {
+  const sorted = [...games].sort((a, b) => {
+    let comparison = 0
+    
+    switch (field) {
+      case 'playtime':
+        comparison = a.playtime_forever - b.playtime_forever
+        break
+      case 'name':
+        const nameA = a.name || `Juego ${a.appid}`
+        const nameB = b.name || `Juego ${b.appid}`
+        comparison = nameA.localeCompare(nameB)
+        break
+      case 'lastPlayed':
+        const lastPlayedA = a.rtime_last_played || 0
+        const lastPlayedB = b.rtime_last_played || 0
+        comparison = lastPlayedA - lastPlayedB
+        break
+      default:
+        return 0
+    }
+    
+    return order === 'asc' ? comparison : -comparison
+  })
+  
+  return sorted
+}
+
+/**
+ * Formatea el tiempo de juego de minutos a un string legible
+ */
+export function formatPlaytime(minutes: number): string {
+  if (minutes < 60) {
+    return `${minutes}min`
+  }
+  
+  const hours = Math.floor(minutes / 60)
+  const remainingMinutes = minutes % 60
+  
+  if (hours < 24) {
+    return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}min` : `${hours}h`
+  }
+  
+  const days = Math.floor(hours / 24)
+  const remainingHours = hours % 24
+  
+  if (remainingHours > 0) {
+    return `${days}d ${remainingHours}h`
+  }
+  
+  return `${days}d`
+}
+
+/**
+ * Formatea la fecha de última vez jugado
+ */
+export function formatLastPlayed(timestamp: number): string {
+  const date = new Date(timestamp * 1000)
+  const now = new Date()
+  const diffTime = Math.abs(now.getTime() - date.getTime())
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  
+  if (diffDays === 1) {
+    return 'Ayer'
+  } else if (diffDays < 7) {
+    return `Hace ${diffDays} días`
+  } else if (diffDays < 30) {
+    const weeks = Math.floor(diffDays / 7)
+    return `Hace ${weeks} semana${weeks > 1 ? 's' : ''}`
+  } else if (diffDays < 365) {
+    const months = Math.floor(diffDays / 30)
+    return `Hace ${months} mes${months > 1 ? 'es' : ''}`
+  } else {
+    const years = Math.floor(diffDays / 365)
+    return `Hace ${years} año${years > 1 ? 's' : ''}`
+  }
+}
+
+/**
+ * Construye URLs de imágenes con fallbacks inteligentes
  */
 export function buildGameImageUrls(appid: number, iconHash?: string, logoHash?: string) {
   return {
-    // Imágenes estáticas (no requieren hash)
     header: `https://cdn.akamai.steamstatic.com/steam/apps/${appid}/header.jpg`,
     capsule: `https://cdn.akamai.steamstatic.com/steam/apps/${appid}/capsule_231x87.jpg`,
-    library: `https://cdn.akamai.steamstatic.com/steam/apps/${appid}/library_600x900.jpg`,
-    
-    // Imágenes dinámicas (requieren hash de la API)
     logo: logoHash ? `https://media.steampowered.com/steamcommunity/public/images/apps/${appid}/${logoHash}.jpg` : '',
     icon: iconHash ? `https://media.steampowered.com/steamcommunity/public/images/apps/${appid}/${iconHash}.jpg` : ''
   }
 }
 
 /**
- * Estrategia de fallback inteligente para imágenes
+ * Obtiene la imagen con sistema de fallback
  */
 export function getImageWithFallback(
-  game: OwnedGame,
-  imageType: ImageType,
+  game: OwnedGame, 
+  imageType: ImageType, 
   imageErrors: Set<string>
-): { url: string; type: string; key: string } | null {
+) {
   const imageUrls = buildGameImageUrls(game.appid, game.img_icon_url, game.img_logo_url)
   const imageKey = `${game.appid}-${imageType}`
   
@@ -146,18 +181,43 @@ export function getImageWithFallback(
 }
 
 /**
- * Formatea el tiempo de juego en un formato legible
+ * Construye la URL de la imagen del juego desde Steam
  */
-export function formatPlaytime(minutes: number): string {
-  const hours = Math.floor(minutes / 60)
-  const remainingMinutes = minutes % 60
-  return `${hours}h ${remainingMinutes}min`
+function buildGameImageUrl(appid: number, hash: string, type: 'icon' | 'logo'): string {
+  if (!hash) return ''
+  
+  // URLs oficiales de Steam para imágenes de juegos
+  const baseUrl = 'https://media.steampowered.com/steamcommunity/public/images/apps'
+  
+  if (type === 'icon') {
+    return `${baseUrl}/${appid}/${hash}.jpg`
+  } else {
+    return `${baseUrl}/${appid}/${hash}.jpg`
+  }
 }
 
 /**
- * Formatea la fecha de última vez jugado
+ * Hook para obtener los juegos poseídos de un usuario de Steam
+ * Utiliza SWR para cache y revalidación al consultar nuestra API interna
  */
-export function formatLastPlayed(timestamp?: number): string {
-  if (!timestamp) return 'Nunca'
-  return new Date(timestamp * 1000).toLocaleDateString()
+export function useSteamGames(steamId: string | null): UseSteamGames {
+  const endpoint = steamId ? `/api/getOwnedGames?steamid=${steamId}` : null
+
+  const { data, error, isValidating } = useSWR<{ games: OwnedGame[] }>(
+    endpoint,
+    (url: string) => fetch(url).then(res => res.json())
+  )
+
+  // Procesar los juegos para agregar URLs de imágenes completas
+  const processedGames = data?.games?.map(game => ({
+    ...game,
+    iconUrl: game.img_icon_url ? buildGameImageUrl(game.appid, game.img_icon_url, 'icon') : '',
+    logoUrl: game.img_logo_url ? buildGameImageUrl(game.appid, game.img_logo_url, 'logo') : '',
+  })) ?? null
+
+  return {
+    games: processedGames,
+    isLoading: !error && isValidating,
+    error: error instanceof Error ? error.message : error ? String(error) : null,
+  }
 }

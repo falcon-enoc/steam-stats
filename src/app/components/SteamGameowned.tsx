@@ -29,8 +29,14 @@ export default function SteamOwnedGames({ steamId }: Props) {
   }
 
   const handleSort = (field: SortField) => {
-    // Como solo tenemos un campo (playtime), solo cambiamos el orden
-    setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    if (field === sortField) {
+      // Si es el mismo campo, cambiar el orden
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      // Si es un campo diferente, establecer campo y orden por defecto
+      setSortField(field)
+      setSortOrder(field === 'playtime' ? 'desc' : 'asc') // Por tiempo: mayor a menor por defecto
+    }
   }
 
   if (isLoading) return <p>Cargando juegos…</p>
@@ -41,38 +47,51 @@ export default function SteamOwnedGames({ steamId }: Props) {
     <div>
       {/* Controles de ordenamiento */}
       <div className="mb-4 flex flex-wrap items-center gap-4">
-        <span className="text-sm font-medium text-gray-700">Ordenar por tiempo jugado:</span>
+        <span className="text-sm font-medium text-gray-700">Ordenar por:</span>
         <div className="flex gap-2">
           <button
             onClick={() => handleSort('playtime')}
             className={`px-3 py-1 rounded text-sm transition-colors flex items-center gap-1 ${
-              sortOrder === 'desc'
+              sortField === 'playtime'
                 ? 'bg-blue-500 text-white' 
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
           >
-            Mayor a menor
-            {sortOrder === 'desc' && (
-              <span className="text-xs">↓</span>
+            Tiempo jugado
+            {sortField === 'playtime' && (
+              <span className="text-xs">{sortOrder === 'desc' ? '↓' : '↑'}</span>
             )}
           </button>
           
           <button
-            onClick={() => setSortOrder('asc')}
+            onClick={() => handleSort('name')}
             className={`px-3 py-1 rounded text-sm transition-colors flex items-center gap-1 ${
-              sortOrder === 'asc'
+              sortField === 'name'
                 ? 'bg-blue-500 text-white' 
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
           >
-            Menor a mayor
-            {sortOrder === 'asc' && (
-              <span className="text-xs">↑</span>
+            Nombre
+            {sortField === 'name' && (
+              <span className="text-xs">{sortOrder === 'desc' ? '↓' : '↑'}</span>
+            )}
+          </button>
+          
+          <button
+            onClick={() => handleSort('lastPlayed')}
+            className={`px-3 py-1 rounded text-sm transition-colors flex items-center gap-1 ${
+              sortField === 'lastPlayed'
+                ? 'bg-blue-500 text-white' 
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            Última vez jugado
+            {sortField === 'lastPlayed' && (
+              <span className="text-xs">{sortOrder === 'desc' ? '↓' : '↑'}</span>
             )}
           </button>
         </div>
       </div>
-
       {/* Selector de tipo de imagen */}
       <div className="mb-6 flex flex-wrap items-center gap-2">
         <span className="text-sm font-medium text-gray-700">Tipo de imagen:</span>
