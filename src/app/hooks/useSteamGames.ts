@@ -8,9 +8,9 @@ interface UseSteamGames {
   error: string | null
 }
 
+
 /**
  * Hook para obtener los juegos poseídos de un usuario de Steam
- * Utiliza SWR para cache y revalidación al consultar nuestra API interna
  */
 export function useSteamGames(steamId: string | null): UseSteamGames {
   const endpoint = steamId ? `/api/getOwnedGames?steamid=${steamId}` : null
