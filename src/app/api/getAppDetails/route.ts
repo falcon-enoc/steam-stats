@@ -1,6 +1,6 @@
 // src/app/api/getAppDetails/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { getAppDetails } from '@/services/steamService'
+import { getAppDetails } from '../../services/steamStoreService'
 
 /**
  * Ruta API para obtener detalles de juegos de Steam
