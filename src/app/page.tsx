@@ -4,21 +4,43 @@ import { useState } from 'react'
 import SteamProfileSearch from './components/SteamProfileSearch'
 import SteamPlayerCard from './components/SteamPlayerCard'
 import SteamOwnedGames from './components/SteamGameowned'
+import LibraryStats from './components/LibraryStats'
 import { useSteamPlayer } from './hooks/useSteamPlayer'
+import { useSteamGames } from './hooks/useSteamGames'
 
 export default function HomePage() {
   const [steamId, setSteamId] = useState<null | string>(null)
   // hook que llama a tu API getPlayerSummaries a partir de steamId
   const { player, isLoading, error } = useSteamPlayer(steamId)
+  // hook que obtiene los juegos con precios
+  const { enrichedGames, isLoading: gamesLoading, pricesLoading } = useSteamGames(steamId)
+  
   return (
     <main className="p-4">
       <p className='text-red-600'>76561198078447643</p>
-      <p className='text-red-600'>www.steampowder.com/prifle/id/InsaPro</p>
+      <p className='text-red-600'>https://steamcommunity.com/id/InsaPro</p>
       <SteamProfileSearch onProfileFound={setSteamId} />
 
       {isLoading && <p>Cargando datos del jugador…</p>}
       {error && <p className="text-red-500">{error}</p>}
-      {player && <SteamPlayerCard player={player} />}
+      
+      {/* Contenedor principal con el perfil y estadísticas */}
+      {player && (
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Tarjeta del jugador */}
+          <div className="lg:col-span-1">
+            <SteamPlayerCard player={player} />
+          </div>
+          
+          {/* Estadísticas de la biblioteca */}
+          <div className="lg:col-span-2">
+            <LibraryStats 
+              games={enrichedGames} 
+              isLoading={gamesLoading || pricesLoading} 
+            />
+          </div>
+        </div>
+      )}
       
       {/* Mostrar juegos del usuario */}
       {steamId && (
