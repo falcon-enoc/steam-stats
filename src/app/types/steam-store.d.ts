@@ -30,9 +30,9 @@ export interface GameDetailsData {
   capsule_image?: string;
   capsule_imagev5?: string;
   website?: string | null;
-  pc_requirements?: Record<string, any> | any[]; // Puede ser un objeto o un array vacío
-  mac_requirements?: Record<string, any> | any[];
-  linux_requirements?: Record<string, any> | any[];
+  pc_requirements?: Record<string, string> | unknown[]; // Puede ser un objeto o un array vacío
+  mac_requirements?: Record<string, string> | unknown[];
+  linux_requirements?: Record<string, string> | unknown[];
   legal_notice?: string;
   drm_notice?: string;
   ext_user_account_notice?: string;

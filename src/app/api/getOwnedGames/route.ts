@@ -11,8 +11,8 @@ export async function GET(request: Request) {
   try {
     const games = await getOwnedGames(steamid)
     return NextResponse.json({ games })
-  } catch (err: any) {
+  } catch (err) {
     console.error('Error en getOwnedGames:', err)
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 })
   }
 }

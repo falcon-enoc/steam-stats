@@ -1,5 +1,5 @@
 // src/lib/fetcher.ts
-const cache = new Map<string, { data: any; expiry: number }>();
+const cache = new Map<string, { data: unknown; expiry: number }>();
 
 /**
  * Wrapper de fetch con:
@@ -25,7 +25,7 @@ export default async function fetcher<T>(
   // Retornar de cache si existe y no expiró
   const cached = cache.get(key);
   if (cached && cached.expiry > now) {
-    return cached.data;
+    return cached.data as T;
   }
 
   let attempt = 0;
@@ -41,7 +41,7 @@ export default async function fetcher<T>(
     try {
       const res = await fetch(input, init);
       const text = await res.text();
-      let data: any = {};
+      let data: unknown = {};
 
       try {
         data = text ? JSON.parse(text) : {};
@@ -58,17 +58,17 @@ export default async function fetcher<T>(
       }
 
       if (!res.ok) {
-        const msg = (data && data.error) || res.statusText;
+        const msg = (data && typeof data === 'object' && 'error' in data ? (data as { error: string }).error : null) || res.statusText;
         throw new Error(`HTTP error ${res.status}: ${msg}`);
       }
 
       // Cachear y retornar
       cache.set(key, { data, expiry: now + ttl });
       return data as T;
-    } catch (err: any) {
-      lastError = err;
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
       // Si no es 429 o agotamos reintentos, romper
-      if (err.message !== '429' || attempt === retries) {
+      if (lastError.message !== '429' || attempt === retries) {
         break;
       }
       attempt++;

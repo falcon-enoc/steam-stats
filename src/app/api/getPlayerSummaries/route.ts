@@ -17,10 +17,10 @@ export async function GET(request: Request) {
   try {
     const players = await getPlayerSummaries(ids)
     return NextResponse.json({ players })
-  } catch (err: any) {
+  } catch (err) {
     console.error('Error en getPlayerSummaries:', err)
     return NextResponse.json(
-      { error: err.message },
+      { error: err instanceof Error ? err.message : String(err) },
       { status: 500 }
     )
   }

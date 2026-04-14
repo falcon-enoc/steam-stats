@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useSteamGames } from '@/hooks/useSteamGames'
 import { motion } from 'framer-motion'
-import { formatPrice, formatPlaytime, formatLastPlayed, calculateHoursPerDollar } from '../utils/formatters'
+import { formatPlaytime, formatLastPlayed, calculateHoursPerDollar } from '../utils/formatters'
 import { 
   sortGames, 
   getImageWithFallback,
@@ -114,7 +114,7 @@ export default function SteamOwnedGames({ steamId }: Props) {
         ].map(({ key, label }) => (
           <button
             key={key}
-            onClick={() => setImageType(key as any)}
+            onClick={() => setImageType(key as ImageType)}
             className={`px-3 py-1 rounded-full text-sm transition-all ${
               imageType === key 
                 ? 'bg-blue-500 text-white shadow-md' 

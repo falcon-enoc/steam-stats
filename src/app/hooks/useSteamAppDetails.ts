@@ -86,6 +86,7 @@ export function useSteamAppDetails(appids: number[] | null) {
     }
 
     fetchAppDetails(appids)
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- appidsKey is a stable serialization of appids
   }, [appidsKey, fetchAppDetails])
 
   return {

@@ -17,10 +17,10 @@ export async function GET(request: Request) {
     const normalized = normalizeVanityURL(vanityurl)
     const steamid = await ResolveVanityURL(normalized)
     return NextResponse.json({ steamid })
-  } catch (err: any) {
+  } catch (err) {
     console.error('Error en resolveVanityURL:', err)
     return NextResponse.json(
-      { error: err.message },
+      { error: err instanceof Error ? err.message : String(err) },
       { status: 500 }
     )
   }

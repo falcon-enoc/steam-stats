@@ -22,7 +22,7 @@ const statusMap: Record<number, string> = {
 
 export default function SteamPlayerCard({ steamId, player: propPlayer }: SteamPlayerCardProps) {
   // Si se proporciona steamId, usamos el hook para obtener los datos
-  const { player: hookPlayer, isLoading, isError } = steamId ? useSteamPlayer(steamId) : { player: undefined, isLoading: false, isError: undefined };
+  const { player: hookPlayer, isLoading, error } = useSteamPlayer(steamId ?? null);
   
   // Usamos el player proporcionado como prop o el obtenido del hook
   const player = propPlayer || hookPlayer;
@@ -42,7 +42,7 @@ export default function SteamPlayerCard({ steamId, player: propPlayer }: SteamPl
   }
 
   // Estado de error
-  if (steamId && isError) {
+  if (steamId && error) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 10 }}
