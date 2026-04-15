@@ -40,3 +40,6 @@ storybook-static/
 # Otros artefactos temporales generales
 .cache/
 dist/
+
+# SQLite database
+data/

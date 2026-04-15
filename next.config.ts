@@ -1,10 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
   images: {
     domains: ['avatars.steamstatic.com'],
   },
+  serverExternalPackages: ['better-sqlite3'],
 };
 
 export default nextConfig;
