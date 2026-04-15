@@ -1,15 +1,22 @@
 import { NextResponse } from 'next/server'
 import { startDemoSession } from '../../../lib/db'
-
-function getClientIp(request: Request): string {
-  return (
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
-    request.headers.get('x-real-ip') ??
-    'unknown'
-  )
-}
+import { getClientIp } from '../../../lib/resolveApiKey'
 
 export async function POST(request: Request) {
+  // CSRF: el browser siempre envía Origin en requests cross-site.
+  // Si Origin está presente y no coincide con el host, rechazar.
+  const origin = request.headers.get('origin')
+  const host = request.headers.get('host')
+  if (origin && host) {
+    const allowedOrigins = [
+      `https://${host}`,
+      `http://${host}`,
+    ]
+    if (!allowedOrigins.includes(origin)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+  }
+
   const demoId = process.env.STEAM_DEMO_ID
   if (!demoId) {
     return NextResponse.json({ error: 'Demo no disponible' }, { status: 503 })
