@@ -101,7 +101,7 @@ export default function SteamPlayerCard({ steamId, player: propPlayer }: SteamPl
         <p className="mt-2 text-sm">
           Status: <span className="font-medium">{statusMap[personastate]}</span>
         </p>
-        {lastlogoff && (
+        {lastlogoff && Number.isInteger(lastlogoff) && lastlogoff > 0 && lastlogoff < 9_999_999_999 && (
           <p className="text-xs text-gray-500">
             Last seen: {new Date(lastlogoff * 1000).toLocaleString()}
           </p>

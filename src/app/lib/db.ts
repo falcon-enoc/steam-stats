@@ -61,6 +61,8 @@ function getDefaultDb(): DatabaseType {
   return defaultDb;
 }
 
+const MAX_APPIDS_PER_QUERY = 500
+
 export function getCachedAppDetails(
   appids: number[],
   maxAgeMs: number,
@@ -68,6 +70,9 @@ export function getCachedAppDetails(
 ): Record<string, { success: true; data: GameDetailsData }> {
   const conn = db ?? getDefaultDb();
   if (appids.length === 0) return {};
+  if (appids.length > MAX_APPIDS_PER_QUERY) {
+    throw new Error(`Too many appids: max ${MAX_APPIDS_PER_QUERY}, got ${appids.length}`)
+  }
 
   const minFetchedAt = Date.now() - maxAgeMs;
   const placeholders = appids.map(() => '?').join(',');
@@ -256,6 +261,9 @@ export function getUncachedAppIds(
 ): number[] {
   const conn = db ?? getDefaultDb();
   if (appids.length === 0) return [];
+  if (appids.length > MAX_APPIDS_PER_QUERY) {
+    throw new Error(`Too many appids: max ${MAX_APPIDS_PER_QUERY}, got ${appids.length}`)
+  }
 
   const minFetchedAt = Date.now() - maxAgeMs;
   const placeholders = appids.map(() => '?').join(',');

@@ -53,8 +53,14 @@ export function useSteamAppDetails(appids: number[] | null) {
           })
         )
         for (const result of results) {
-          if (result.status === 'fulfilled') {
-            Object.assign(allAppDetails, result.value)
+          if (result.status === 'fulfilled' && result.value && typeof result.value === 'object') {
+            // Spread en lugar de Object.assign directo: evita prototype pollution
+            // si la respuesta contiene __proto__ o constructor como keys
+            for (const [k, v] of Object.entries(result.value)) {
+              if (k !== '__proto__' && k !== 'constructor' && k !== 'prototype') {
+                allAppDetails[k] = v
+              }
+            }
           }
         }
         console.log(`Processed batches ${i + 1}-${Math.min(i + concurrency, batches.length)}/${batches.length}`)
