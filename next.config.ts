@@ -31,7 +31,7 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: https://avatars.steamstatic.com https://cdn.cloudflare.steamstatic.com",
+              "img-src 'self' data: https://avatars.steamstatic.com https://cdn.cloudflare.steamstatic.com https://cdn.akamai.steamstatic.com https://media.steampowered.com https://steamcdn-a.akamaihd.net",
               "connect-src 'self' https://api.steampowered.com https://store.steampowered.com",
               "font-src 'self'",
               "frame-ancestors 'none'",
