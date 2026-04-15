@@ -29,6 +29,23 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    if (appids.length > 50) {
+      return NextResponse.json(
+        { error: `Too many appids: ${appids.length}. Maximum allowed is 50` },
+        { status: 400 }
+      )
+    }
+
+    for (const id of appids) {
+      const num = Number(id)
+      if (!Number.isInteger(num) || num <= 0) {
+        return NextResponse.json(
+          { error: `Invalid appid: '${id}' is not a positive integer` },
+          { status: 400 }
+        )
+      }
+    }
+
     console.log(`Fetching Steam app details for: ${appids.join(', ')}`)
     
     // Usar el servicio para obtener los detalles

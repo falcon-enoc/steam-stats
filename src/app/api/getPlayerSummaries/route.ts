@@ -12,7 +12,16 @@ export async function GET(request: Request) {
     )
   }
 
-  const ids = steamids.split(',')
+  const ids = steamids.split(',').map(id => id.trim()).filter(id => id)
+
+  for (const id of ids) {
+    if (!/^\d{17}$/.test(id)) {
+      return NextResponse.json(
+        { error: `Invalid steamid: '${id}' must be exactly 17 numeric digits` },
+        { status: 400 }
+      )
+    }
+  }
 
   try {
     const players = await getPlayerSummaries(ids)

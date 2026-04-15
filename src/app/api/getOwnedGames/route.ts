@@ -8,6 +8,12 @@ export async function GET(request: Request) {
   if (!steamid) {
     return NextResponse.json({ error: 'El parámetro steamid es requerido' }, { status: 400 })
   }
+  if (!/^\d{17}$/.test(steamid)) {
+    return NextResponse.json(
+      { error: `Invalid steamid: '${steamid}' must be exactly 17 numeric digits` },
+      { status: 400 }
+    )
+  }
   try {
     const games = await getOwnedGames(steamid)
     return NextResponse.json({ games })
