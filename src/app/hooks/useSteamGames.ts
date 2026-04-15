@@ -40,18 +40,21 @@ export function useSteamGames(steamId: string | null): UseSteamGames {
       return
     }
 
+    // Si hay appids pendientes pero aún no tenemos appDetails,
+    // esperar a que el fetch de precios termine
     if (!appDetails) {
-      // Solo mostrar juegos sin precios si no está cargando
-      if (!pricesLoading) {
+      if (!appids || appids.length === 0) {
+        // No hay juegos con precio que buscar
         setEnrichedGames(data.games)
       }
+      // Si hay appids pero no appDetails, seguimos esperando
       return
     }
 
     const gamesWithPrices = data.games.map(game => {
       const details = appDetails[game.appid.toString()]
       const gameDetails = details?.success ? details.data : undefined
-      
+
       return {
         ...game,
         game_details: gameDetails,
@@ -61,7 +64,7 @@ export function useSteamGames(steamId: string | null): UseSteamGames {
     })
 
     setEnrichedGames(gamesWithPrices)
-  }, [data?.games, appDetails, pricesLoading])
+  }, [data?.games, appDetails, appids])
 
   return {
     games: data?.games ?? null,

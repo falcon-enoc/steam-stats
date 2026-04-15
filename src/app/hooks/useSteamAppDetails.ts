@@ -30,10 +30,10 @@ export function useSteamAppDetails(appids: number[] | null) {
         return
       }
 
-      // Dividir en lotes de 20 para mayor estabilidad
-      const batchSize = 20
+      // Dividir en lotes de 40 para mayor rendimiento
+      const batchSize = 40
       const batches: number[][] = []
-      
+
       for (let i = 0; i < validAppids.length; i += batchSize) {
         batches.push(validAppids.slice(i, i + batchSize))
       }
@@ -42,27 +42,25 @@ export function useSteamAppDetails(appids: number[] | null) {
 
       const allAppDetails: AppDetailsResponse = {}
 
-      // Procesar lotes secuencialmente para evitar rate limiting
-      for (const [index, batch] of batches.entries()) {
-        try {
-          const url = `/api/getAppDetails?appids=${batch.join(',')}`
-          const batchData = await fetcher<AppDetailsResponse>(
-            url, 
-            undefined, 
-            600_000 // 10 min cache
-          )
-          
-          Object.assign(allAppDetails, batchData)
-          console.log(`✅ Processed batch ${index + 1}/${batches.length}`)
-          
-          // Pequeña pausa entre lotes para evitar rate limiting
-          if (index < batches.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 200))
+      // Procesar lotes concurrentemente (2 a la vez) para mayor velocidad
+      const concurrency = 2
+      for (let i = 0; i < batches.length; i += concurrency) {
+        const chunk = batches.slice(i, i + concurrency)
+        const results = await Promise.allSettled(
+          chunk.map((batch) => {
+            const url = `/api/getAppDetails?appids=${batch.join(',')}`
+            return fetcher<AppDetailsResponse>(url, undefined, 600_000)
+          })
+        )
+        for (const result of results) {
+          if (result.status === 'fulfilled') {
+            Object.assign(allAppDetails, result.value)
           }
-          
-        } catch (batchError) {
-          console.error(`❌ Error processing batch ${index + 1}:`, batchError)
-          // Continuar con otros lotes en caso de error
+        }
+        console.log(`Processed batches ${i + 1}-${Math.min(i + concurrency, batches.length)}/${batches.length}`)
+        // Small delay between concurrent groups
+        if (i + concurrency < batches.length) {
+          await new Promise(resolve => setTimeout(resolve, 50))
         }
       }
 
@@ -86,7 +84,6 @@ export function useSteamAppDetails(appids: number[] | null) {
     }
 
     fetchAppDetails(appids)
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- appidsKey is a stable serialization of appids
   }, [appidsKey, fetchAppDetails])
 
   return {
