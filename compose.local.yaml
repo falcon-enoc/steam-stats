@@ -1,0 +1,17 @@
+services:
+  steam-stats:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: steam-stats-local
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.local
+    volumes:
+      - steam-data-local:/app/data
+
+volumes:
+  steam-data-local:
+    driver: local

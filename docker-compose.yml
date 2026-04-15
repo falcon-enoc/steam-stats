@@ -1,0 +1,24 @@
+services:
+  steam-stats:
+    image: ghcr.io/falcon-enoc/steam-stats:latest
+    container_name: steam-stats
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - STEAM_KEY=${STEAM_KEY}
+      - STEAM_DEMO_ID=${STEAM_DEMO_ID}
+      - STEAM_STORE_CC=${STEAM_STORE_CC:-cl}
+    volumes:
+      - steam-data:/app/data
+    networks:
+      - tunnel_net
+
+volumes:
+  steam-data:
+    driver: local
+
+networks:
+  tunnel_net:
+    external: true
