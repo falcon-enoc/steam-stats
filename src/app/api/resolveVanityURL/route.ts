@@ -29,9 +29,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ steamid })
   } catch (err) {
     console.error('Error en resolveVanityURL:', err)
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : String(err) },
-      { status: 500 }
-    )
+    // Errores de "usuario no encontrado" son seguros de mostrar al cliente
+    const msg = err instanceof Error && err.message.includes('Usuario no encontrado')
+      ? err.message
+      : 'Error al resolver la URL de Steam'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

@@ -29,6 +29,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ games })
   } catch (err) {
     console.error('Error en getOwnedGames:', err)
-    return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 })
+    return NextResponse.json({ error: 'Error al obtener juegos del perfil' }, { status: 500 })
   }
 }
