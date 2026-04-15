@@ -1,5 +1,62 @@
 # Arquitectura — Steam Stats
 
+## Patrón arquitectónico
+
+Esta aplicación sigue el patrón **BFF (Backend for Frontend) + Layered Frontend**.
+
+### BFF — Backend for Frontend
+
+Las API routes de Next.js (`/api/*`) actúan como un proxy inteligente entre el cliente y la Steam API. El navegador **nunca habla directamente con Steam** — siempre pasa por el backend propio.
+
+```
+Navegador → /api/getOwnedGames → Steam Web API
+```
+
+Esto resuelve tres problemas reales del proyecto:
+1. **Seguridad**: `STEAM_KEY` nunca sale del servidor. Si el cliente llamara a Steam directamente, la key quedaría expuesta en el bundle o en las requests del navegador.
+2. **CORS**: Steam no permite llamadas directas desde navegadores.
+3. **Control**: El proxy permite añadir cache, validación, rate limiting y transformaciones de datos sin tocar el cliente.
+
+### Layered Frontend
+
+Dentro del cliente hay separación clara de responsabilidades en capas:
+
+```
+┌─────────────────────────────────┐
+│  components/  → renderizado y UX │  ← sabe de React, no sabe de Steam
+├─────────────────────────────────┤
+│  hooks/       → estado y efectos │  ← orquesta fetching, no sabe de HTML
+├─────────────────────────────────┤
+│  services/    → lógica de negocio│  ← server-only, llama a Steam
+├─────────────────────────────────┤
+│  utils/       → funciones puras  │  ← sin efectos, sin dependencias
+└─────────────────────────────────┘
+```
+
+Cada capa solo depende de las que están por debajo, nunca al revés.
+
+### ¿Por qué no Server Components puros?
+
+Next.js App Router favorece renderizar datos en el servidor con Server Components. Aquí no aplica porque:
+
+- Los datos son **dinámicos en runtime**: dependen del SteamID que el usuario introduce en el buscador, no de algo conocido al buildear.
+- No hay ruta por usuario — todo ocurre en una sola página `/` que cambia de estado en el cliente.
+- Steam no tiene webhooks ni streaming — es pull puro, lo que encaja bien con SWR.
+
+El resultado es efectivamente un **SPA de análisis** montado sobre Next.js. Next.js aporta las API routes (el BFF), el bundling, el deploy en Vercel y las optimizaciones de fuentes/imágenes. El rendering del contenido principal es 100% cliente, y eso es la decisión correcta para este caso.
+
+### Trade-offs asumidos
+
+| Decisión | Ventaja | Coste |
+|----------|---------|-------|
+| Client-first rendering | Simple, sin estado en servidor | Sin SSR/SEO del contenido |
+| Cache en memoria (fetcher) | Rápido, sin infraestructura extra | Se pierde al recargar la página |
+| Cache SQLite (app details) | Persiste entre requests, 24h TTL | Solo funciona en un servidor (no edge, no serverless stateless) |
+| SWR sobre React Query | Más ligero, suficiente para este caso | Menos features (no mutations complejas, no infinite scroll nativo) |
+| Paginación "Mostrar más" | Simple de implementar y mantener | No es tan eficiente como virtualización para 1000+ juegos |
+
+---
+
 ## Stack
 
 | Capa | Tecnología |
