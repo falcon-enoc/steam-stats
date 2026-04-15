@@ -17,8 +17,6 @@ export default function HomePage() {
   
   return (
     <main className="p-4">
-      <p className='text-red-600'>76561198078447643</p>
-      <p className='text-red-600'>https://steamcommunity.com/id/InsaPro</p>
       <SteamProfileSearch onProfileFound={setSteamId} />
 
       {isLoading && <p>Cargando datos del jugador…</p>}
