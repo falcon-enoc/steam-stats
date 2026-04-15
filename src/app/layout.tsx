@@ -1,9 +1,10 @@
 // app/layout.tsx
-import './globals.css';           // tus estilos globales
+import './globals.css';
 import { ReactNode } from 'react';
+import Providers from './providers';
 
-export const metadata = {         // opcional: meta tags, título por defecto…
-  title: 'Mi Steam App',
+export const metadata = {
+  title: 'Steam Stats',
   description: 'Consulta datos de Steam con Next.js',
 };
 
@@ -11,8 +12,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es">
       <body>
-        {/* Aquí tu Header/Provider/Layout común */}
-        <main>{children}</main>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );
