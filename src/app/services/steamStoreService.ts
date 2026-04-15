@@ -4,6 +4,7 @@ import { getCachedAppDetails, setCachedAppDetails, getUncachedAppIds } from '../
 
 const STEAM_STORE_API_BASE = 'https://store.steampowered.com/api'
 const CACHE_TTL_MS = 86400000 // 24 hours
+const STORE_CC = process.env.STEAM_STORE_CC ?? 'cl' // country code para precios
 
 /**
  * Obtiene detalles de aplicaciones (incluyendo precios) usando la Steam Store API
@@ -49,7 +50,7 @@ export async function getAppDetails(appids: string[]): Promise<AppDetailsRespons
 
   // Hacer consultas individuales con Promise.allSettled para evitar que un error pare todo
   const promises = uncachedAppids.map(async (appid) => {
-    const url = `${STEAM_STORE_API_BASE}/appdetails?appids=${appid}&filters=price_overview,basic`
+    const url = `${STEAM_STORE_API_BASE}/appdetails?appids=${appid}&filters=price_overview,basic&cc=${STORE_CC}`
     
     try {
       const response = await fetch(url, {
