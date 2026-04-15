@@ -1,4 +1,5 @@
 // src/lib/fetcher.ts
+const MAX_CACHE_SIZE = 200;
 const cache = new Map<string, { data: unknown; expiry: number }>();
 
 /**
@@ -24,8 +25,9 @@ export default async function fetcher<T>(
 
   // Retornar de cache si existe y no expiró
   const cached = cache.get(key);
-  if (cached && cached.expiry > now) {
-    return cached.data as T;
+  if (cached) {
+    if (cached.expiry > now) return cached.data as T;
+    cache.delete(key);
   }
 
   let attempt = 0;
@@ -62,6 +64,16 @@ export default async function fetcher<T>(
         throw new Error(`HTTP error ${res.status}: ${msg}`);
       }
 
+      // Evictar si se alcanzó el límite
+      if (cache.size >= MAX_CACHE_SIZE) {
+        const now2 = Date.now();
+        for (const [k, v] of cache) {
+          if (v.expiry <= now2) cache.delete(k);
+        }
+        if (cache.size >= MAX_CACHE_SIZE) {
+          cache.delete(cache.keys().next().value!);
+        }
+      }
       // Cachear y retornar
       cache.set(key, { data, expiry: now + ttl });
       return data as T;
