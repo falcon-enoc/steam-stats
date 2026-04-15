@@ -12,6 +12,8 @@ import {
   type ImageType 
 } from '../utils/steamGamesUtils'
 
+const GAMES_PER_PAGE = 24
+
 interface Props {
   steamId: string
 }
@@ -22,6 +24,7 @@ export default function SteamOwnedGames({ steamId }: Props) {
   const [imageType, setImageType] = useState<ImageType>('header')
   const [sortField, setSortField] = useState<SortField>('playtime')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
+  const [visibleCount, setVisibleCount] = useState(GAMES_PER_PAGE)
 
   const handleImageError = (key: string) => {
     setImageErrors(prev => new Set(prev).add(key))
@@ -29,13 +32,12 @@ export default function SteamOwnedGames({ steamId }: Props) {
 
   const handleSort = (field: SortField) => {
     if (field === sortField) {
-      // Si es el mismo campo, cambiar el orden
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
     } else {
-      // Si es un campo diferente, establecer campo y orden por defecto
       setSortField(field)
-      setSortOrder(field === 'playtime' ? 'desc' : 'asc') // Por tiempo: mayor a menor por defecto
+      setSortOrder(field === 'playtime' ? 'desc' : 'asc')
     }
+    setVisibleCount(GAMES_PER_PAGE)
   }
 
   if (isLoading) return <p>Cargando juegos…</p>
@@ -114,7 +116,7 @@ export default function SteamOwnedGames({ steamId }: Props) {
         ].map(({ key, label }) => (
           <button
             key={key}
-            onClick={() => setImageType(key as ImageType)}
+            onClick={() => { setImageType(key as ImageType); setVisibleCount(GAMES_PER_PAGE) }}
             className={`px-3 py-1 rounded-full text-sm transition-all ${
               imageType === key 
                 ? 'bg-blue-500 text-white shadow-md' 
@@ -127,21 +129,18 @@ export default function SteamOwnedGames({ steamId }: Props) {
       </div>
 
       <motion.ul
-        key={`${imageType}-${sortField}-${sortOrder}`} // Re-animar cuando cambie el tipo o ordenamiento
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
       >
-        {sortGames(enrichedGames, sortField, sortOrder).map(game => {
+        {sortGames(enrichedGames, sortField, sortOrder).slice(0, visibleCount).map(game => {
           const imageData = getImageWithFallback(game, imageType, imageErrors)
           
           return (
-            <motion.li 
-              key={game.appid} 
+            <motion.li
+              key={game.appid}
               className="border rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
+              layout
             >
               {/* Imagen del juego */}
               <div className="w-full h-28 bg-gray-100 flex items-center justify-center overflow-hidden relative">
@@ -275,6 +274,17 @@ export default function SteamOwnedGames({ steamId }: Props) {
           )
         })}
       </motion.ul>
+
+      {visibleCount < enrichedGames.length && (
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => setVisibleCount(c => c + GAMES_PER_PAGE)}
+            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            Mostrar más ({enrichedGames.length - visibleCount} restantes)
+          </button>
+        </div>
+      )}
     </div>
   )
 }
