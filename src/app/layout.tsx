@@ -2,6 +2,7 @@
 import './globals.css';           // tus estilos globales
 import { ReactNode } from 'react';
 import Providers from './providers';
+import ErrorBoundary from './components/ErrorBoundary';
 
 export const metadata = {         // opcional: meta tags, título por defecto…
   title: 'Mi Steam App',
@@ -13,7 +14,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="es">
       <body>
         <Providers>
-          <main>{children}</main>
+          <ErrorBoundary>
+            <main>{children}</main>
+          </ErrorBoundary>
         </Providers>
       </body>
     </html>
