@@ -34,9 +34,10 @@ export default function HomePage() {
           
           {/* Estadísticas de la biblioteca */}
           <div className="lg:col-span-2">
-            <LibraryStats 
-              games={enrichedGames} 
-              isLoading={gamesLoading || pricesLoading} 
+            <LibraryStats
+              games={enrichedGames}
+              isLoading={gamesLoading || pricesLoading}
+              pricesReady={!pricesLoading && !!enrichedGames}
             />
           </div>
         </div>
