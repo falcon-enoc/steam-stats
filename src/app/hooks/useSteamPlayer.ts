@@ -4,8 +4,7 @@ import type { Player } from '../types/steam'
 
 export function useSteamPlayer(steamId: string | null) {
   const { data, error } = useSWR<{ players: Player[] }>(
-    steamId ? `/api/getPlayerSummaries?steamids=${steamId}` : null,
-    (url: string) => fetch(url).then(res => res.json())
+    steamId ? `/api/getPlayerSummaries?steamids=${steamId}` : null
   )
 
   return {
@@ -17,8 +16,7 @@ export function useSteamPlayer(steamId: string | null) {
 
 export function useResolveVanityURL(vanityUrl: string | null) {
   const { data, error } = useSWR<string>(
-    vanityUrl ? `/api/resolveVanityURL?vanityurl=${encodeURIComponent(vanityUrl)}` : null,
-    (url: string) => fetch(url).then(res => res.json())
+    vanityUrl ? `/api/resolveVanityURL?vanityurl=${encodeURIComponent(vanityUrl)}` : null
   )
 
   return {
