@@ -30,6 +30,17 @@ export function normalizeVanityURL(input: string): string {
   else if (str.includes('steamcommunity.com/profile/')) {
     str = str.split('steamcommunity.com/profile/')[1];
   }
-  // Eliminar cualquier slash o parámetro adicional
-  return str.split('/')[0].split('?')[0];
+  // Eliminar slashes y parámetros adicionales
+  const vanity = str.split('/')[0].split('?')[0];
+
+  // Steam permite: letras, números, guión bajo, guión. Máximo 32 caracteres.
+  // Rechazar cualquier otra cosa antes de enviarlo a la API.
+  if (vanity.length === 0 || vanity.length > 32) {
+    throw new Error('URL de Steam inválida: el identificador debe tener entre 1 y 32 caracteres');
+  }
+  if (!/^[a-zA-Z0-9_-]+$/.test(vanity)) {
+    throw new Error('URL de Steam inválida: solo se permiten letras, números, _ y -');
+  }
+
+  return vanity;
 }

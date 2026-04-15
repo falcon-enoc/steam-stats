@@ -30,6 +30,12 @@ CREATE TABLE IF NOT EXISTS price_history (
 );
 
 CREATE INDEX IF NOT EXISTS idx_price_appid ON price_history(appid, recorded_at);
+
+CREATE TABLE IF NOT EXISTS demo_sessions (
+  ip         TEXT PRIMARY KEY,
+  started_at INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL
+);
 `;
 
 let defaultDb: DatabaseType | null = null;
@@ -55,6 +61,8 @@ function getDefaultDb(): DatabaseType {
   return defaultDb;
 }
 
+const MAX_APPIDS_PER_QUERY = 500
+
 export function getCachedAppDetails(
   appids: number[],
   maxAgeMs: number,
@@ -62,6 +70,9 @@ export function getCachedAppDetails(
 ): Record<string, { success: true; data: GameDetailsData }> {
   const conn = db ?? getDefaultDb();
   if (appids.length === 0) return {};
+  if (appids.length > MAX_APPIDS_PER_QUERY) {
+    throw new Error(`Too many appids: max ${MAX_APPIDS_PER_QUERY}, got ${appids.length}`)
+  }
 
   const minFetchedAt = Date.now() - maxAgeMs;
   const placeholders = appids.map(() => '?').join(',');
@@ -198,6 +209,51 @@ export function getHistoricalPrices(
   return result;
 }
 
+const DEMO_WINDOW_MS = 30 * 60 * 1000   // 30 min para cargar todo
+const DEMO_COOLDOWN_MS = 24 * 60 * 60 * 1000 // 24h antes de poder repetir
+
+/**
+ * Intenta iniciar una sesión demo para la IP dada.
+ * Retorna true si la sesión fue creada o está activa.
+ * Retorna false si el cooldown de 24h no ha pasado.
+ */
+export function startDemoSession(ip: string, db?: DatabaseType): boolean {
+  const conn = db ?? getDefaultDb()
+  const now = Date.now()
+
+  const existing = conn.prepare(
+    'SELECT started_at, expires_at FROM demo_sessions WHERE ip = ?'
+  ).get(ip) as { started_at: number; expires_at: number } | undefined
+
+  if (existing) {
+    // Sesión activa — dentro de la ventana de 30 min
+    if (now < existing.expires_at) return true
+    // Cooldown de 24h aún activo
+    if (now - existing.started_at < DEMO_COOLDOWN_MS) return false
+  }
+
+  // Nueva sesión o cooldown vencido — crear/renovar
+  conn.prepare(`
+    INSERT INTO demo_sessions (ip, started_at, expires_at)
+    VALUES (?, ?, ?)
+    ON CONFLICT(ip) DO UPDATE SET started_at = excluded.started_at, expires_at = excluded.expires_at
+  `).run(ip, now, now + DEMO_WINDOW_MS)
+
+  return true
+}
+
+/**
+ * Verifica si la IP tiene una sesión demo activa (dentro de la ventana de 30 min).
+ */
+export function isDemoSessionActive(ip: string, db?: DatabaseType): boolean {
+  const conn = db ?? getDefaultDb()
+  const now = Date.now()
+  const row = conn.prepare(
+    'SELECT expires_at FROM demo_sessions WHERE ip = ?'
+  ).get(ip) as { expires_at: number } | undefined
+  return !!row && now < row.expires_at
+}
+
 export function getUncachedAppIds(
   appids: number[],
   maxAgeMs: number,
@@ -205,6 +261,9 @@ export function getUncachedAppIds(
 ): number[] {
   const conn = db ?? getDefaultDb();
   if (appids.length === 0) return [];
+  if (appids.length > MAX_APPIDS_PER_QUERY) {
+    throw new Error(`Too many appids: max ${MAX_APPIDS_PER_QUERY}, got ${appids.length}`)
+  }
 
   const minFetchedAt = Date.now() - maxAgeMs;
   const placeholders = appids.map(() => '?').join(',');

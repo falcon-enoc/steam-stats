@@ -1,5 +1,6 @@
 'use client'
 import { SWRConfig } from 'swr'
+import { SteamAuthProvider } from './context/SteamAuthContext'
 
 async function globalFetcher(url: string) {
   const res = await fetch(url)
@@ -12,15 +13,17 @@ async function globalFetcher(url: string) {
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <SWRConfig
-      value={{
-        fetcher: globalFetcher,
-        revalidateOnFocus: false,
-        dedupingInterval: 10_000,
-        errorRetryCount: 3,
-      }}
-    >
-      {children}
-    </SWRConfig>
+    <SteamAuthProvider>
+      <SWRConfig
+        value={{
+          fetcher: globalFetcher,
+          revalidateOnFocus: false,
+          dedupingInterval: 10_000,
+          errorRetryCount: 3,
+        }}
+      >
+        {children}
+      </SWRConfig>
+    </SteamAuthProvider>
   )
 }

@@ -1,9 +1,10 @@
 // src/hooks/useSteamGames.ts
+'use client'
 import useSWR from 'swr'
 import { useEffect, useState, useMemo } from 'react'
 import type { OwnedGame } from '@/types/steam'
 import { useSteamAppDetails } from './useSteamAppDetails'
-import fetcher from '../lib/fetcher'
+import { useAuthFetcher } from './useAuthFetcher'
 
 interface UseSteamGames {
   games: OwnedGame[] | null
@@ -19,10 +20,11 @@ interface UseSteamGames {
 export function useSteamGames(steamId: string | null): UseSteamGames {
   const endpoint = steamId ? `/api/getOwnedGames?steamid=${steamId}` : null
   const [enrichedGames, setEnrichedGames] = useState<OwnedGame[] | null>(null)
+  const authFetcher = useAuthFetcher()
 
   const { data, error, isValidating } = useSWR<{ games: OwnedGame[] }>(
     endpoint,
-    fetcher
+    authFetcher
   )
 
   // Memoizar los appids para evitar re-renders innecesarios

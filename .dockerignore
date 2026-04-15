@@ -1,0 +1,13 @@
+.git
+.gitignore
+.env*
+node_modules
+.next
+data
+*.sqlite
+*.md
+.github
+Dockerfile
+docker-compose*.yml
+tsconfig.tsbuildinfo
+coverage

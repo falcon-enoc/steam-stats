@@ -133,7 +133,7 @@ export default function SteamPlayerCard({ steamId, player: propPlayer }: SteamPl
           {status.label}
         </span>
 
-        {lastlogoff && personastate === 0 && (
+        {lastlogoff && Number.isInteger(lastlogoff) && lastlogoff > 0 && personastate === 0 && (
           <p style={{ fontSize: 11, color: 'rgba(199,213,224,0.3)', fontFamily: 'var(--font-body)', marginTop: 4 }}>
             {new Date(lastlogoff * 1000).toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' })}
           </p>
