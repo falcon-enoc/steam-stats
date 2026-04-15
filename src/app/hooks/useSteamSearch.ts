@@ -1,15 +1,30 @@
 // src/hooks/useSteamSearch.ts
+'use client'
+import { useCallback } from 'react'
 import { isSteamID64, extractSteamID, normalizeVanityURL } from '@/utils/steamUtils'
 import useSWRMutation from 'swr/mutation'
-
-async function resolveVanity(_: string, { arg: vanityUrl }: { arg: string }) {
-  const res = await fetch(`/api/resolveVanityURL?vanityurl=${encodeURIComponent(vanityUrl)}`)
-  const json = await res.json()
-  if (!res.ok) throw new Error(json.error || 'No se pudo resolver vanity URL')
-  return json.steamid as string
-}
+import { useSteamAuth } from '../context/SteamAuthContext'
 
 export function useSteamSearch() {
+  const { apiKey, isDemoMode } = useSteamAuth()
+
+  const resolveVanity = useCallback(
+    async (_: string, { arg: vanityUrl }: { arg: string }) => {
+      const headers: Record<string, string> = {}
+      if (apiKey) headers['X-Steam-Api-Key'] = apiKey
+      else if (isDemoMode) headers['X-Demo'] = 'true'
+
+      const res = await fetch(
+        `/api/resolveVanityURL?vanityurl=${encodeURIComponent(vanityUrl)}`,
+        { headers }
+      )
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'No se pudo resolver vanity URL')
+      return json.steamid as string
+    },
+    [apiKey, isDemoMode]
+  )
+
   const { trigger, isMutating, error } = useSWRMutation('/api/resolveVanityURL', resolveVanity)
 
   const searchProfile = async (input: string): Promise<string> => {
