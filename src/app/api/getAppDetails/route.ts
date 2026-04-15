@@ -1,5 +1,5 @@
 // src/app/api/getAppDetails/route.ts
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { getAppDetails } from '../../services/steamStoreService'
 
 /**
@@ -7,7 +7,7 @@ import { getAppDetails } from '../../services/steamStoreService'
  * Acepta múltiples appids separados por comas en query params
  * Ejemplo: /api/getAppDetails?appids=570,730,440
  */
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const appidsParam = searchParams.get('appids')
@@ -29,6 +29,23 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    if (appids.length > 50) {
+      return NextResponse.json(
+        { error: `Too many appids: ${appids.length}. Maximum allowed is 50` },
+        { status: 400 }
+      )
+    }
+
+    for (const id of appids) {
+      const num = Number(id)
+      if (!Number.isInteger(num) || num <= 0) {
+        return NextResponse.json(
+          { error: `Invalid appid: '${id}' is not a positive integer` },
+          { status: 400 }
+        )
+      }
+    }
+
     console.log(`Fetching Steam app details for: ${appids.join(', ')}`)
     
     // Usar el servicio para obtener los detalles
@@ -40,10 +57,7 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching Steam app details:', error)
     
     return NextResponse.json(
-      { 
-        error: 'Error interno del servidor al obtener detalles del juego',
-        details: error instanceof Error ? error.message : 'Error desconocido'
-      },
+      { error: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   }

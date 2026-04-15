@@ -1,5 +1,6 @@
 // src/lib/fetcher.ts
-const cache = new Map<string, { data: any; expiry: number }>();
+const MAX_CACHE_SIZE = 200;
+const cache = new Map<string, { data: unknown; expiry: number }>();
 
 /**
  * Wrapper de fetch con:
@@ -24,8 +25,9 @@ export default async function fetcher<T>(
 
   // Retornar de cache si existe y no expiró
   const cached = cache.get(key);
-  if (cached && cached.expiry > now) {
-    return cached.data;
+  if (cached) {
+    if (cached.expiry > now) return cached.data as T;
+    cache.delete(key);
   }
 
   let attempt = 0;
@@ -41,7 +43,7 @@ export default async function fetcher<T>(
     try {
       const res = await fetch(input, init);
       const text = await res.text();
-      let data: any = {};
+      let data: unknown = {};
 
       try {
         data = text ? JSON.parse(text) : {};
@@ -58,17 +60,27 @@ export default async function fetcher<T>(
       }
 
       if (!res.ok) {
-        const msg = (data && data.error) || res.statusText;
+        const msg = (data && typeof data === 'object' && 'error' in data ? (data as { error: string }).error : null) || res.statusText;
         throw new Error(`HTTP error ${res.status}: ${msg}`);
       }
 
+      // Evictar si se alcanzó el límite
+      if (cache.size >= MAX_CACHE_SIZE) {
+        const now2 = Date.now();
+        for (const [k, v] of cache) {
+          if (v.expiry <= now2) cache.delete(k);
+        }
+        if (cache.size >= MAX_CACHE_SIZE) {
+          cache.delete(cache.keys().next().value!);
+        }
+      }
       // Cachear y retornar
       cache.set(key, { data, expiry: now + ttl });
       return data as T;
-    } catch (err: any) {
-      lastError = err;
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
       // Si no es 429 o agotamos reintentos, romper
-      if (err.message !== '429' || attempt === retries) {
+      if (lastError.message !== '429' || attempt === retries) {
         break;
       }
       attempt++;

@@ -13,7 +13,7 @@ export function useSteamAppDetails(appids: number[] | null) {
   const [error, setError] = useState<string | null>(null)
 
   // Crear key estable para evitar re-ejecuciones innecesarias
-  const appidsKey = appids ? appids.sort().join(',') : null
+  const appidsKey = appids ? appids.slice().sort().join(',') : null
 
   const fetchAppDetails = useCallback(async (targetAppids: number[]) => {
     if (!targetAppids || targetAppids.length === 0) return
@@ -30,10 +30,10 @@ export function useSteamAppDetails(appids: number[] | null) {
         return
       }
 
-      // Dividir en lotes de 20 para mayor estabilidad
-      const batchSize = 20
+      // Dividir en lotes de 40 para mayor rendimiento
+      const batchSize = 40
       const batches: number[][] = []
-      
+
       for (let i = 0; i < validAppids.length; i += batchSize) {
         batches.push(validAppids.slice(i, i + batchSize))
       }
@@ -42,27 +42,31 @@ export function useSteamAppDetails(appids: number[] | null) {
 
       const allAppDetails: AppDetailsResponse = {}
 
-      // Procesar lotes secuencialmente para evitar rate limiting
-      for (const [index, batch] of batches.entries()) {
-        try {
-          const url = `/api/getAppDetails?appids=${batch.join(',')}`
-          const batchData = await fetcher<AppDetailsResponse>(
-            url, 
-            undefined, 
-            600_000 // 10 min cache
-          )
-          
-          Object.assign(allAppDetails, batchData)
-          console.log(`✅ Processed batch ${index + 1}/${batches.length}`)
-          
-          // Pequeña pausa entre lotes para evitar rate limiting
-          if (index < batches.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 200))
+      // Procesar lotes concurrentemente (2 a la vez) para mayor velocidad
+      const concurrency = 2
+      for (let i = 0; i < batches.length; i += concurrency) {
+        const chunk = batches.slice(i, i + concurrency)
+        const results = await Promise.allSettled(
+          chunk.map((batch) => {
+            const url = `/api/getAppDetails?appids=${batch.join(',')}`
+            return fetcher<AppDetailsResponse>(url, undefined, 600_000)
+          })
+        )
+        for (const result of results) {
+          if (result.status === 'fulfilled' && result.value && typeof result.value === 'object') {
+            // Spread en lugar de Object.assign directo: evita prototype pollution
+            // si la respuesta contiene __proto__ o constructor como keys
+            for (const [k, v] of Object.entries(result.value)) {
+              if (k !== '__proto__' && k !== 'constructor' && k !== 'prototype') {
+                allAppDetails[k] = v
+              }
+            }
           }
-          
-        } catch (batchError) {
-          console.error(`❌ Error processing batch ${index + 1}:`, batchError)
-          // Continuar con otros lotes en caso de error
+        }
+        console.log(`Processed batches ${i + 1}-${Math.min(i + concurrency, batches.length)}/${batches.length}`)
+        // Small delay between concurrent groups
+        if (i + concurrency < batches.length) {
+          await new Promise(resolve => setTimeout(resolve, 50))
         }
       }
 

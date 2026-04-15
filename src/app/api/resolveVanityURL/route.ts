@@ -1,7 +1,8 @@
 // src/app/api/resolveVanityURL/route.ts
 import { NextResponse } from 'next/server'
 import { normalizeVanityURL } from '@/utils/steamUtils'
-import { ResolveVanityURL } from '@/services/steamService'
+import { ResolveVanityURL } from '@/services/steamWebApiService'
+import { resolveApiKey } from '@/lib/resolveApiKey'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -13,15 +14,25 @@ export async function GET(request: Request) {
     )
   }
 
+  // vanityURL no tiene SteamID aún — no aplica restricción de demo por ID
+  const apiKey = resolveApiKey(request)
+  if (!apiKey) {
+    return NextResponse.json(
+      { error: 'Se requiere una API key de Steam. Ingresa la tuya o usa el modo demo.' },
+      { status: 401 }
+    )
+  }
+
   try {
     const normalized = normalizeVanityURL(vanityurl)
-    const steamid = await ResolveVanityURL(normalized)
+    const steamid = await ResolveVanityURL(normalized, apiKey)
     return NextResponse.json({ steamid })
-  } catch (err: any) {
+  } catch (err) {
     console.error('Error en resolveVanityURL:', err)
-    return NextResponse.json(
-      { error: err.message },
-      { status: 500 }
-    )
+    // Errores de "usuario no encontrado" son seguros de mostrar al cliente
+    const msg = err instanceof Error && err.message.includes('Usuario no encontrado')
+      ? err.message
+      : 'Error al resolver la URL de Steam'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

@@ -3,100 +3,167 @@
 import { motion } from 'framer-motion'
 import type { OwnedGame } from '../types/steam'
 import { useLibraryStats } from '../hooks/useLibraryStats'
-import { formatPrice, formatPlaytime, formatHoursPerDollar } from '../utils/formatters'
+import { formatPrice, formatPlaytime } from '../utils/formatters'
 
 interface LibraryStatsProps {
   games: OwnedGame[] | null
   isLoading: boolean
+  pricesReady?: boolean
 }
 
-export default function LibraryStats({ games, isLoading }: LibraryStatsProps) {
-  const stats = useLibraryStats(games)
+const card: React.CSSProperties = {
+  background: 'linear-gradient(160deg, rgba(42,71,94,0.45) 0%, rgba(27,40,56,0.9) 100%)',
+  border: '1px solid rgba(102,192,244,0.12)',
+  borderRadius: '8px',
+  padding: '20px 22px',
+}
+
+const row: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  padding: '7px 0',
+}
+
+const label: React.CSSProperties = {
+  fontSize: 13,
+  color: 'rgba(199,213,224,0.5)',
+  fontFamily: 'var(--font-body)',
+}
+
+const value: React.CSSProperties = {
+  fontSize: 13,
+  fontFamily: 'var(--font-body)',
+  fontWeight: 500,
+  color: '#c7d5e0',
+}
+
+function Divider() {
+  return <div style={{ height: 1, background: 'rgba(102,192,244,0.08)', margin: '4px 0' }} />
+}
+
+export default function LibraryStats({ games, isLoading, pricesReady = false }: LibraryStatsProps) {
+  const stats = useLibraryStats(games, pricesReady)
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6 animate-pulse">
-        <div className="h-6 bg-gray-200 rounded mb-4"></div>
-        <div className="space-y-3">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="flex justify-between">
-              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-            </div>
-          ))}
-        </div>
+      <div style={{ ...card, opacity: 0.6 }}>
+        {[...Array(5)].map((_, i) => (
+          <div key={i} style={{ ...row }}>
+            <div style={{ height: 12, width: '45%', background: 'rgba(102,192,244,0.06)', borderRadius: 3 }} />
+            <div style={{ height: 12, width: '20%', background: 'rgba(102,192,244,0.06)', borderRadius: 3 }} />
+          </div>
+        ))}
       </div>
     )
   }
 
   if (!stats) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold mb-4">Estadísticas de la Biblioteca</h3>
-        <p className="text-gray-500">No hay datos disponibles</p>
+      <div style={card}>
+        <p style={{ ...label }}>No hay datos disponibles</p>
       </div>
     )
   }
 
   return (
-    <motion.div 
-      className="bg-white rounded-lg shadow-md p-6"
-      initial={{ opacity: 0, y: 20 }}
+    <motion.div
+      style={card}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
     >
-      <h3 className="text-lg font-semibold mb-4 text-gray-800">
-        📊 Estadísticas de la Biblioteca
+      <h3 style={{
+        fontFamily: 'var(--font-display)',
+        fontSize: '0.85rem',
+        fontWeight: 700,
+        letterSpacing: '0.12em',
+        textTransform: 'uppercase',
+        color: 'rgba(102,192,244,0.7)',
+        marginBottom: 12,
+      }}>
+        Biblioteca
       </h3>
-      
-      <div className="space-y-3">
-        <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-600">Total de juegos:</span>
-          <span className="font-medium">{stats.totalGames.toLocaleString()}</span>
+
+      {/* Top stats */}
+      <div style={row}>
+        <span style={label}>Total de juegos</span>
+        <span style={value}>{stats.totalGames.toLocaleString()}</span>
+      </div>
+      <div style={row}>
+        <span style={label}>Tiempo total jugado</span>
+        <span style={value}>{formatPlaytime(stats.totalPlaytime)}</span>
+      </div>
+      <div style={row}>
+        <span style={label}>Juegos gratuitos</span>
+        <span style={{ ...value, color: '#57cbde' }}>{stats.freeGames}</span>
+      </div>
+      {stats.freeGamesPlaytime > 0 && (
+        <div style={row}>
+          <span style={label}>Tiempo en gratuitos</span>
+          <span style={{ ...value, color: '#57cbde' }}>{formatPlaytime(stats.freeGamesPlaytime)}</span>
         </div>
-        
-        <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-600">Tiempo total jugado:</span>
-          <span className="font-medium">{formatPlaytime(stats.totalPlaytime)}</span>
-        </div>
-        
-        <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-600">Valor de la biblioteca:</span>
-          <span className="font-medium">{formatPrice(stats.totalLibraryValue, stats.currency)}</span>
-        </div>
-        
-        <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-600">Juegos gratuitos:</span>
-          <span className="font-medium text-green-600">{stats.freeGames}</span>
-        </div>
-        
-        {/* Tiempo en juegos gratuitos */}
-        {stats.freeGamesPlaytime > 0 && (
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600">Tiempo en juegos gratuitos:</span>
-            <span className="font-medium text-green-600">{formatPlaytime(stats.freeGamesPlaytime)}</span>
+      )}
+
+      <Divider />
+
+      {/* Valor */}
+      <div style={{ margin: '6px 0 4px' }}>
+        <p style={{ ...label, marginBottom: 6 }}>Valor de la biblioteca</p>
+        <div style={{ background: 'rgba(27,40,56,0.6)', border: '1px solid rgba(102,192,244,0.08)', borderRadius: 6, padding: '10px 12px' }}>
+          <div style={row}>
+            <span style={{ ...label, fontSize: 12 }}>Precio base</span>
+            <span style={{ ...value, fontSize: 12 }}>{formatPrice(stats.totalFullValue, stats.currency)}</span>
           </div>
-        )}
-        
-        <div className="border-t pt-3">
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600">Horas por dólar:</span>
-            <span className={`font-bold text-lg ${
-              stats.hoursPerDollar > 50 ? 'text-green-600' : 
-              stats.hoursPerDollar > 20 ? 'text-yellow-600' : 'text-red-600'
-            }`}>
-              {formatHoursPerDollar(stats.hoursPerDollar)}
+          <div style={row}>
+            <span style={{ ...label, fontSize: 12 }}>Precio actual</span>
+            <span style={{ ...value, fontSize: 12, color: '#66c0f4' }}>{formatPrice(stats.totalLibraryValue, stats.currency)}</span>
+          </div>
+          {stats.totalFullValue > stats.totalLibraryValue && (
+            <div style={row}>
+              <span style={{ ...label, fontSize: 12 }}>Ahorro en ofertas</span>
+              <span style={{ ...value, fontSize: 12, color: '#57cbde' }}>
+                -{formatPrice(stats.totalFullValue - stats.totalLibraryValue, stats.currency)}
+              </span>
+            </div>
+          )}
+          <div style={{ height: 1, background: 'rgba(102,192,244,0.08)', margin: '6px 0' }} />
+          <div style={row}>
+            <span style={{ ...label, fontSize: 12 }}>
+              Mejor precio histórico
+              {!stats.hasHistoricalData && (
+                <span style={{ color: '#c99a2e', marginLeft: 4, fontSize: 11 }}>(acumulando…)</span>
+              )}
             </span>
+            <span style={{ ...value, fontSize: 12, color: '#a88beb' }}>{formatPrice(stats.totalLowestValue, stats.currency)}</span>
           </div>
-          <p className="text-xs text-gray-500 mt-1">
-            Basado en {stats.gamesWithPriceAndPlaytime} juegos con precio y tiempo de juego
-          </p>
         </div>
-        
-        <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-600">Precio promedio por juego:</span>
-          <span className="font-medium">{formatPrice(stats.averageGamePrice, stats.currency)}</span>
-        </div>
+      </div>
+
+      <Divider />
+
+      {/* Cost per hour — highlight */}
+      <div style={{ ...row, marginTop: 4 }}>
+        <span style={label}>Costo por hora</span>
+        <span style={{
+          ...value,
+          fontSize: 18,
+          fontFamily: 'var(--font-display)',
+          fontWeight: 700,
+          color: stats.costPerHour < 200 ? '#57cbde' : stats.costPerHour < 1000 ? '#c99a2e' : '#c6372c',
+        }}>
+          {formatPrice(Math.round(stats.costPerHour * 100), stats.currency)}/h
+        </span>
+      </div>
+      <p style={{ fontSize: 11, color: 'rgba(199,213,224,0.28)', fontFamily: 'var(--font-body)', marginTop: 2 }}>
+        Basado en {stats.gamesWithPriceAndPlaytime} juegos con precio y tiempo
+      </p>
+
+      <Divider />
+
+      <div style={row}>
+        <span style={label}>Precio promedio por juego</span>
+        <span style={value}>{formatPrice(stats.averageGamePrice, stats.currency)}</span>
       </div>
     </motion.div>
   )

@@ -1,4 +1,5 @@
 // config.ts
+import 'server-only'
 
 /**
  * Centraliza la carga de variables de entorno.

@@ -1,9 +1,10 @@
 // src/hooks/useSteamGames.ts
+'use client'
 import useSWR from 'swr'
 import { useEffect, useState, useMemo } from 'react'
 import type { OwnedGame } from '@/types/steam'
 import { useSteamAppDetails } from './useSteamAppDetails'
-import fetcher from '../lib/fetcher'
+import { useAuthFetcher } from './useAuthFetcher'
 
 interface UseSteamGames {
   games: OwnedGame[] | null
@@ -19,10 +20,11 @@ interface UseSteamGames {
 export function useSteamGames(steamId: string | null): UseSteamGames {
   const endpoint = steamId ? `/api/getOwnedGames?steamid=${steamId}` : null
   const [enrichedGames, setEnrichedGames] = useState<OwnedGame[] | null>(null)
+  const authFetcher = useAuthFetcher()
 
   const { data, error, isValidating } = useSWR<{ games: OwnedGame[] }>(
     endpoint,
-    fetcher
+    authFetcher
   )
 
   // Memoizar los appids para evitar re-renders innecesarios
@@ -40,18 +42,21 @@ export function useSteamGames(steamId: string | null): UseSteamGames {
       return
     }
 
+    // Si hay appids pendientes pero aún no tenemos appDetails,
+    // esperar a que el fetch de precios termine
     if (!appDetails) {
-      // Solo mostrar juegos sin precios si no está cargando
-      if (!pricesLoading) {
+      if (!appids || appids.length === 0) {
+        // No hay juegos con precio que buscar
         setEnrichedGames(data.games)
       }
+      // Si hay appids pero no appDetails, seguimos esperando
       return
     }
 
     const gamesWithPrices = data.games.map(game => {
       const details = appDetails[game.appid.toString()]
       const gameDetails = details?.success ? details.data : undefined
-      
+
       return {
         ...game,
         game_details: gameDetails,
@@ -61,7 +66,7 @@ export function useSteamGames(steamId: string | null): UseSteamGames {
     })
 
     setEnrichedGames(gamesWithPrices)
-  }, [data?.games, appDetails, pricesLoading])
+  }, [data?.games, appDetails, appids])
 
   return {
     games: data?.games ?? null,

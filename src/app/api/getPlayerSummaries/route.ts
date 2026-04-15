@@ -1,6 +1,7 @@
 // src/app/api/getPlayerSummaries/route.ts
 import { NextResponse } from 'next/server'
-import { getPlayerSummaries } from '@/services/steamService'
+import { getPlayerSummaries } from '@/services/steamWebApiService'
+import { resolveApiKey } from '@/lib/resolveApiKey'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -12,16 +13,31 @@ export async function GET(request: Request) {
     )
   }
 
-  const ids = steamids.split(',')
+  const ids = steamids.split(',').map(id => id.trim()).filter(id => id)
+
+  for (const id of ids) {
+    if (!/^\d{17}$/.test(id)) {
+      return NextResponse.json(
+        { error: `Invalid steamid: '${id}' must be exactly 17 numeric digits` },
+        { status: 400 }
+      )
+    }
+  }
+
+  // Pasar todos los IDs: en modo demo, resolveApiKey verifica que TODOS sean el demo ID
+  const apiKey = resolveApiKey(request, ids)
+  if (!apiKey) {
+    return NextResponse.json(
+      { error: 'Se requiere una API key de Steam. Ingresa la tuya o usa el modo demo.' },
+      { status: 401 }
+    )
+  }
 
   try {
-    const players = await getPlayerSummaries(ids)
+    const players = await getPlayerSummaries(ids, apiKey)
     return NextResponse.json({ players })
-  } catch (err: any) {
+  } catch (err) {
     console.error('Error en getPlayerSummaries:', err)
-    return NextResponse.json(
-      { error: err.message },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Error al obtener datos del jugador' }, { status: 500 })
   }
 }
